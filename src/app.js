@@ -55,7 +55,7 @@ export function criarApp(opcoes = {}) {
     try {
       cabecalhosSeguranca(res);
       const url = new URL(req.url, 'http://localhost');
-      if (url.pathname.startsWith('/api/')) return await tratarApi(rotas, req, res, url, db);
+      if (url.pathname.startsWith('/api/')) return await tratarApi(rotas, req, res, url, db, adapter);
       return await servirEstatico(url.pathname, res);
     } catch (e) {
       if (e instanceof ErroNegocio) return json(res, e.status, { erro: e.message, ...e.extra });
@@ -92,13 +92,16 @@ function criarRotas(ctx) {
     }),
 
     // --- Autenticação do cidadão (sem e-mail) ---
-    'POST /api/auth/codigo': async ({ body, ip }) => {
+    'POST /api/auth/codigo': async ({ body, ip, res }) => {
       limitarTaxa(`otp:${ip}`, 10, 10 * 60_000);
-      return pacientes.solicitarCodigo(ctx, body.cpf, body.nascimento);
+      const { desafio, ...resposta } = await pacientes.solicitarCodigo(ctx, body.cpf, body.nascimento);
+      definirCookie(res, desafio, cfg.otpValidadeMin / 60, 'otp');
+      return resposta;
     },
-    'POST /api/auth/entrar': ({ body, ip, res }) => {
+    'POST /api/auth/entrar': ({ body, ip, res, req }) => {
       limitarTaxa(`login:${ip}`, 20, 10 * 60_000);
-      const r = pacientes.verificarCodigo(ctx, body.cpf, body.codigo);
+      const r = pacientes.verificarCodigo(ctx, body.cpf, body.codigo, lerCookie(req, 'otp'));
+      definirCookie(res, '', 0, 'otp'); // o desafio do código não serve mais
       definirCookie(res, r.token, cfg.sessaoHoras);
       return { nome: r.nome };
     },
@@ -187,7 +190,7 @@ function criarRotas(ctx) {
   };
 }
 
-async function tratarApi(rotas, req, res, url, db) {
+async function tratarApi(rotas, req, res, url, db, adapter) {
   const { handler, params } = encontrarRota(rotas, req.method, url.pathname);
   if (!handler) return json(res, 404, { erro: 'Rota não encontrada.' });
   if (req.method === 'POST' && req.headers['x-requested-with'] !== 'consulta-facil') {
@@ -195,7 +198,7 @@ async function tratarApi(rotas, req, res, url, db) {
   }
   const body = req.method === 'POST' ? await lerCorpo(req) : {};
   const token = lerCookie(req, url.pathname.startsWith('/api/painel/') ? 'sid_ubs' : 'sid');
-  const sessao = pacientes.obterSessao(db, token);
+  const sessao = pacientes.obterSessao(db, token, adapter);
   // Atrás do proxy da Vercel, o IP real vem no x-forwarded-for
   const encaminhado = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim();
   const ip = encaminhado || req.socket.remoteAddress || 'desconhecido';
@@ -258,7 +261,10 @@ function lerCookie(req, nome) {
 // Cookies separados para cidadão e equipe: entrar no painel não derruba a sessão do app.
 function definirCookie(res, valor, horas, nome = 'sid') {
   const seguro = process.env.VERCEL ? '; Secure' : ''; // HTTPS na Vercel; localhost usa HTTP
-  res.setHeader('Set-Cookie', `${nome}=${valor}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${Math.round(horas * 3600)}${seguro}`);
+  const anteriores = res.getHeader('Set-Cookie');
+  const lista = anteriores ? [].concat(anteriores) : []; // mais de um cookie na mesma resposta
+  lista.push(`${nome}=${valor}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${Math.round(horas * 3600)}${seguro}`);
+  res.setHeader('Set-Cookie', lista);
 }
 
 function cabecalhosSeguranca(res) {

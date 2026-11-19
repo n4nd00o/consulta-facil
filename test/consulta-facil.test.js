@@ -50,7 +50,7 @@ describe('RA01 — acesso sem e-mail', () => {
     assert.match(r1.dados.codigoDemo, /^\d{6}$/);
     const r2 = await req('POST', '/api/auth/entrar', { corpo: { cpf: p.cpf, codigo: r1.dados.codigoDemo } });
     assert.equal(r2.status, 200);
-    assert.match(r2.cookie, /sid=[a-f0-9]{64}; HttpOnly/);
+    assert.match(r2.cookie, /sid=[\w-]+\.[\w-]+; HttpOnly/);
   });
 
   test('data de nascimento errada não revela se o CPF existe', async () => {
@@ -167,6 +167,50 @@ describe('RF02 — cancelar e remarcar', () => {
   });
 });
 
+describe('Várias instâncias do servidor (Vercel)', () => {
+  test('login feito numa instância vale em outra, com banco separado (painel não "fecha")', async () => {
+    const outra = criarApp({ dbPath: ':memory:', iniciarWorker: false, config: cfgTeste });
+    await new Promise((r) => outra.server.listen(0, r));
+    const base2 = `http://127.0.0.1:${outra.server.address().port}`;
+    try {
+      // Painel: entra na instância 1, consulta na instância 2
+      const login = await req('POST', '/api/painel/entrar', { corpo: { senha: app.cfg.painelSenha } });
+      const sidUbs = login.cookie.match(/sid_ubs=([\w.-]+)/)[1];
+      const r1 = await fetch(`${base2}/api/painel/resumo`, { headers: { Cookie: `sid_ubs=${sidUbs}` } });
+      assert.equal(r1.status, 200);
+
+      // Cidadão: pede o código na instância 1 e confirma na instância 2 (cookie com o desafio assinado)
+      const p = PACIENTES_DEMO[1];
+      const [d, m, a] = p.nasc.split('/');
+      const H = { 'Content-Type': 'application/json', 'X-Requested-With': 'consulta-facil' };
+      const c = await fetch(`${base}/api/auth/codigo`, { method: 'POST', headers: H, body: JSON.stringify({ cpf: p.cpf, nascimento: `${a}-${m}-${d}` }) });
+      const otp = c.headers.get('set-cookie').match(/otp=([\w.-]+)/)[1];
+      const { codigoDemo } = await c.json();
+      const e = await fetch(`${base2}/api/auth/entrar`, { method: 'POST', headers: { ...H, Cookie: `otp=${otp}` }, body: JSON.stringify({ cpf: p.cpf, codigo: codigoDemo }) });
+      assert.equal(e.status, 200);
+      const sid = e.headers.get('set-cookie').match(/sid=([\w-]+\.[\w-]+)/)[1];
+      const eu = await fetch(`${base}/api/eu`, { headers: { Cookie: `sid=${sid}` } });
+      assert.equal(eu.status, 200, 'a sessão criada na instância 2 vale na instância 1');
+
+      // Sair revoga o token
+      await fetch(`${base}/api/auth/sair`, { method: 'POST', headers: { ...H, Cookie: `sid=${sid}` } });
+      assert.equal((await fetch(`${base}/api/eu`, { headers: { Cookie: `sid=${sid}` } })).status, 401);
+    } finally {
+      await outra.fechar();
+    }
+  });
+
+  test('token adulterado é recusado', async () => {
+    const login = await req('POST', '/api/painel/entrar', { corpo: { senha: app.cfg.painelSenha } });
+    const sidUbs = login.cookie.match(/sid_ubs=([\w.-]+)/)[1];
+    const [corpo, assinatura] = sidUbs.split('.');
+    const falso = Buffer.from(JSON.stringify({ t: 'sessao', perfil: 'ubs', exp: Date.now() + 1e9 })).toString('base64url');
+    const r = await req('GET', '/api/painel/resumo', { sidUbs: `${falso}.${assinatura}` });
+    assert.equal(r.status, 401);
+    assert.ok(corpo);
+  });
+});
+
 describe('Operação', () => {
   test('migração do legado: ensaio não grava e a efetiva é idempotente', () => {
     const contar = () => app.db.prepare('SELECT COUNT(*) AS n FROM vagas').get().n;
@@ -184,7 +228,7 @@ describe('Operação', () => {
     const negado = await req('GET', '/api/painel/resumo');
     assert.equal(negado.status, 401);
     const login = await req('POST', '/api/painel/entrar', { corpo: { senha: app.cfg.painelSenha } });
-    const sidUbs = login.cookie.match(/sid_ubs=([a-f0-9]+)/)[1];
+    const sidUbs = login.cookie.match(/sid_ubs=([\w.-]+)/)[1];
     const r = await req('GET', '/api/painel/resumo', { sidUbs });
     assert.equal(r.dados.integridade.vagasComReservaDuplicada, 0);
     assert.ok(r.dados.jornada.tentativas > 0);
