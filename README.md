@@ -3,6 +3,9 @@
 Aplicativo funcional da proposta do **Grupo 2 (A3)**: agendar, remarcar e cancelar consultas nas UBS,
 lembretes por SMS, fila de espera e painel para a equipe da UBS.
 
+**No ar:** https://consulta-facil-kappa.vercel.app · painel da equipe: https://consulta-facil-kappa.vercel.app/painel
+(demonstração com dados fictícios; os dados recomeçam de tempos em tempos).
+
 Sem dependências externas: **Node.js 22.5+** (usa o SQLite embutido `node:sqlite`).
 
 > **Passo a passo de instalação, uso e roteiro de demonstração: [COMO-USAR.md](COMO-USAR.md)**

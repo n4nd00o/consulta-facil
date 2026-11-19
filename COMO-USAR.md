@@ -21,6 +21,12 @@ e usa o SQLite que já vem dentro do Node.js.
 
 ## 2. Como iniciar
 
+> **Sem instalar nada:** a versão publicada está em https://consulta-facil-kappa.vercel.app
+> (painel da equipe em `/painel`). Ela usa um banco temporário: os dados voltam ao início de tempos em
+> tempos e, raramente, pode ser preciso entrar de novo. Para a apresentação, rodar localmente é o mais estável.
+
+Para rodar no seu computador:
+
 Abra o **PowerShell** (ou o terminal do VS Code) na pasta do projeto:
 
 ```powershell
