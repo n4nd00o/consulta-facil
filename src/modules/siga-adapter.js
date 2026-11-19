@@ -63,10 +63,21 @@ const titulo = (s) =>
   String(s).trim().toLowerCase().replace(/(^|\s)(\p{L})/gu, (_, e, l) => e + l.toUpperCase())
     .replace(/\s(Da|De|Do|Das|Dos|E)(?=\s)/g, (w) => w.toLowerCase());
 
+// O SIGA-Saúde grava horário local de Vale Verde (Brasília, UTC−3, sem horário de verão desde 2019).
+// O fuso é fixo para que o resultado não dependa do servidor (a Vercel roda em UTC).
+const FUSO = 'America/Sao_Paulo';
+const OFFSET_BRASILIA = '-03:00';
+const dois = (n) => String(n).padStart(2, '0');
+
 function dataHoraLegadoParaIso(data, hora) {
   const [d, m, a] = data.split('/').map(Number);
-  const [h, min] = hora.split(':').map(Number);
-  return new Date(a, m - 1, d, h, min).toISOString();
+  return new Date(`${a}-${dois(m)}-${dois(d)}T${hora}:00${OFFSET_BRASILIA}`).toISOString();
+}
+
+/** "Hoje" no calendário de Brasília, como data local (para contar dias úteis). */
+function hojeEmBrasilia(agora) {
+  const [d, m, a] = agora.toLocaleDateString('pt-BR', { timeZone: FUSO }).split('/').map(Number);
+  return new Date(a, m - 1, d);
 }
 
 // ---------------------------------------------------------------------------
@@ -139,7 +150,7 @@ export function criarLegadoSimulado(hoje = new Date()) {
   TB_MEDICO.push({ CD_MED: 'M016', NM_MED: 'RAFAEL MONTEIRO', DS_ESPEC: 'CARDIOLOGIA', CD_UBS: 1 });
 
   const TB_AGENDA = [];
-  const dias = proximosDiasUteis(hoje, 5);
+  const dias = proximosDiasUteis(hojeEmBrasilia(hoje), 5);
   for (const med of TB_MEDICO) {
     dias.forEach((dia, idxDia) => {
       horariosDo(med.DS_ESPEC, idxDia).forEach((h, j) => {

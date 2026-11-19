@@ -152,5 +152,6 @@ export class WorkerNotificacoes {
   }
 }
 
+// Texto dos SMS sempre no horário de Brasília, mesmo com o servidor em UTC (Vercel).
 export const fmt = (iso) =>
-  new Date(iso).toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
