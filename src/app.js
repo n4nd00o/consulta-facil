@@ -20,6 +20,14 @@ const PUBLICO = resolve(fileURLToPath(new URL('../public/', import.meta.url)));
 const TIPOS = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
 const UBS_PILOTO = [1, 2, 3]; // 3 UBS no piloto (meta de 3 meses)
 
+// Entrada na Vercel (detectada automaticamente): o app é criado no primeiro acesso de cada instância.
+// Localmente, quem usa este módulo é src/server.js (npm start) e os testes, via criarApp().
+let instanciaServerless = null;
+export default function handler(req, res) {
+  instanciaServerless ??= criarApp({ serverless: true });
+  return instanciaServerless.tratar(req, res);
+}
+
 export function criarApp(opcoes = {}) {
   const cfg = { ...configPadrao, ...opcoes.config };
   const db = abrirBanco(opcoes.dbPath ?? cfg.dbPath);

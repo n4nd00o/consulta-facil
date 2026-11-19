@@ -58,7 +58,8 @@ rótulos e mensagens ligados aos campos (`aria-describedby`, `aria-invalid`), av
 
 O mesmo código roda localmente (`npm start`) e na Vercel:
 
-- `api/index.js` é a função serverless; o `vercel.json` manda todas as rotas (páginas e API) para ela.
+- A Vercel detecta `src/app.js` como servidor: a exportação padrão (`handler`) atende páginas e API.
+  O `vercel.json` só inclui a pasta `public/` na função.
 - Sem processo contínuo na Vercel, a fila de SMS (outbox) avança a cada requisição.
 - O banco SQLite fica em `/tmp`, que é **temporário**: a demonstração recomeça com os dados iniciais sempre que a
   Vercel cria uma nova instância (e pode pedir login de novo). Para produção, o banco iria para um serviço

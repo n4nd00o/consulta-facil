@@ -7,3 +7,5 @@ data/
 
 # Cópia antiga duplicada (não faz parte do projeto)
 /consulta-facil/
+
+.vercel
