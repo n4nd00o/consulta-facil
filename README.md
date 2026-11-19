@@ -67,6 +67,9 @@ O mesmo código roda localmente (`npm start`) e na Vercel:
 - O banco SQLite fica em `/tmp`, que é **temporário**: a demonstração recomeça com os dados iniciais sempre que a
   Vercel cria uma nova instância (e pode pedir login de novo). Para produção, o banco iria para um serviço
   gerenciado (ex.: Postgres), trocando apenas a camada de dados.
+- A Vercel roda várias cópias do app ao mesmo tempo. Por isso o login (do cidadão e da equipe) é um **token
+  assinado (HMAC)** no cookie, que vale em qualquer cópia; o banco guarda só a lista de sessões encerradas.
+  A chave fica na variável `SESSAO_SEGREDO` (já configurada no projeto da Vercel; localmente é gerada a cada início).
 - Variável opcional no painel da Vercel: `PAINEL_SENHA` (senha do painel da equipe; padrão de demonstração `ubs123`).
 - Cada `git push` na branch `main` publica automaticamente uma nova versão.
 
