@@ -53,7 +53,50 @@
             </fieldset>
             <button class="botao principal bloco" type="submit">Receber código por SMS</button>
           </form>
+          <div class="divisor" role="separator"><span>Primeira vez aqui?</span></div>
+          <button class="botao bloco secundario" type="button" id="ir-cadastro">Criar meu cadastro</button>
           <p class="ajuda-campo">Não tem celular? A recepção da sua UBS marca a consulta para você.</p>
+        </section>
+
+        <!-- Passo 1 (alternativo): cadastro de quem ainda não tem -->
+        <section id="tela-cadastro" class="tela" hidden>
+          <p class="passo">Passo 1 de 5 · Cadastro</p>
+          <h1 tabindex="-1">Criar seu cadastro</h1>
+          <p class="texto-apoio">Leva 1 minuto e não precisa de e-mail. Na primeira consulta, a UBS confere seus documentos.</p>
+          <form id="form-cadastro" novalidate>
+            <div class="campo">
+              <label for="nome-cad">Nome completo</label>
+              <input id="nome-cad" autocomplete="name" maxlength="100" aria-describedby="nome-cad-erro">
+              <p id="nome-cad-erro" class="erro-campo" hidden></p>
+            </div>
+            <div class="campo">
+              <label for="cpf-cad">CPF</label>
+              <input id="cpf-cad" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" aria-describedby="cpf-cad-erro">
+              <p id="cpf-cad-erro" class="erro-campo" hidden></p>
+            </div>
+            <fieldset aria-describedby="nasc-cad-erro">
+              <legend>Data de nascimento</legend>
+              <div class="data">
+                <div><label for="dia-cad">Dia</label><input id="dia-cad" inputmode="numeric" maxlength="2" placeholder="DD"></div>
+                <div><label for="mes-cad">Mês</label><input id="mes-cad" inputmode="numeric" maxlength="2" placeholder="MM"></div>
+                <div><label for="ano-cad">Ano</label><input id="ano-cad" inputmode="numeric" maxlength="4" placeholder="AAAA"></div>
+              </div>
+              <p id="nasc-cad-erro" class="erro-campo" hidden></p>
+            </fieldset>
+            <div class="campo">
+              <label for="tel-cad">Celular com DDD</label>
+              <input id="tel-cad" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(11) 98888-7777" maxlength="15" aria-describedby="tel-cad-dica tel-cad-erro">
+              <p id="tel-cad-dica" class="ajuda-campo">Enviaremos o código e os lembretes para este número.</p>
+              <p id="tel-cad-erro" class="erro-campo" hidden></p>
+            </div>
+            <div class="consentimento">
+              <input type="checkbox" id="consentimento" aria-describedby="consentimento-erro">
+              <label for="consentimento">Autorizo o uso do meu nome, CPF, data de nascimento e celular <strong>apenas</strong> para agendar consultas e receber avisos da Secretaria de Saúde (LGPD).</label>
+            </div>
+            <p id="consentimento-erro" class="erro-campo" hidden></p>
+            <button class="botao principal bloco" type="submit">Cadastrar e receber código</button>
+          </form>
+          <button class="botao bloco secundario" type="button" id="ja-tenho">Já tenho cadastro</button>
         </section>
 
         <!-- Passo 2: código -->
@@ -181,6 +224,8 @@
 
       <p class="demo-nota">Vagas: cada confirmação reduz 1 vaga e nunca passa de zero.
         <strong id="demo-codigo"></strong></p>
+
+      <button type="button" class="botao bloco" id="demo-cadastro">Preencher um cadastro novo (fictício)</button>
 
       <details class="demo-pacientes" id="demo-pacientes">
         <summary>Pacientes fictícios para entrar</summary>

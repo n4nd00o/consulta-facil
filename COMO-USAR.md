@@ -91,6 +91,19 @@ pois não há um provedor de SMS real conectado. No celular de verdade, ele apar
    e não podem ser escolhidos. Se a unidade não tiver nenhum horário livre, aparece **Entrar na fila de espera**.
 5. **Passo 5 de 5** — **Confira e confirme**: resumo da consulta → **Confirmar consulta**.
 
+### Primeira vez: criar cadastro
+Quem não está no cadastro da UBS (SIGA-Saúde) toca em **Criar meu cadastro**, na tela de entrada. O botão
+aparece embaixo de "Primeira vez aqui?", e o aviso de "não encontramos cadastro" também aponta para ele.
+- Pede só **nome completo, CPF, data de nascimento e celular com DDD**. Não há e-mail nem senha (RA01).
+- É obrigatório marcar a **autorização de uso dos dados (LGPD)**; sem ela, o cadastro não é enviado.
+- Cada campo é conferido antes do envio, com o erro explicado embaixo do campo.
+- Depois vem o **código por SMS**, que confirma o celular, e a pessoa já entra e pode agendar.
+- Se o CPF **já tem cadastro**, o app volta para "Entrar" com os dados preenchidos.
+- É um **pré-cadastro**: na **Agenda da recepção** do painel da equipe, o nome aparece com o aviso
+  *"Pré-cadastro pelo app: conferir documento e Cartão SUS"*.
+- Na demonstração, o botão **"Preencher um cadastro novo (fictício)"** do painel lateral preenche tudo com
+  um CPF válido inventado; falta só marcar a autorização.
+
 ### Início
 "Olá, Maria! O que você precisa hoje?", o cartão **Sua próxima consulta** e os botões **Agendar consulta** e
 **Ver, remarcar ou cancelar**. Se abrir uma vaga da fila de espera, aparece um cartão **"Abriu uma vaga"**.

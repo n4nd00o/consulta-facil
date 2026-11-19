@@ -100,7 +100,7 @@ export function definirFlag(db, ubsId, ativa) {
 /** Agenda para a recepção: CPF mascarado (minimização), nome e telefone para contato. */
 export function agendaDaUbs(db, ubsId) {
   return db.prepare(`SELECT c.id, v.inicio, pr.nome AS profissional, pr.especialidade, p.nome AS paciente, p.cpf, p.telefone,
-                       c.presenca_confirmada
+                       p.origem, c.presenca_confirmada
                      FROM consultas c JOIN vagas v ON v.id = c.vaga_id JOIN profissionais pr ON pr.id = v.profissional_id
                      JOIN pacientes p ON p.id = c.paciente_id
                      WHERE pr.ubs_id = ? AND c.status = 'confirmada' AND v.inicio > ? ORDER BY v.inicio LIMIT 200`)

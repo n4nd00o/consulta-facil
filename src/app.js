@@ -98,6 +98,12 @@ function criarRotas(ctx) {
       definirCookie(res, desafio, cfg.otpValidadeMin / 60, 'otp');
       return resposta;
     },
+    'POST /api/auth/cadastro': async ({ body, ip, res }) => {
+      limitarTaxa(`cadastro:${ip}`, 10, 10 * 60_000);
+      const { desafio, ...resposta } = await pacientes.cadastrar(ctx, body);
+      definirCookie(res, desafio, cfg.otpValidadeMin / 60, 'otp');
+      return resposta;
+    },
     'POST /api/auth/entrar': ({ body, ip, res, req }) => {
       limitarTaxa(`login:${ip}`, 20, 10 * 60_000);
       const r = pacientes.verificarCodigo(ctx, body.cpf, body.codigo, lerCookie(req, 'otp'));

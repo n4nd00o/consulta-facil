@@ -52,6 +52,7 @@ Para produção: `DEMO=0 PAINEL_SENHA=... BACKOFF_UNIT_MS=60000 npm start`.
 | 7 | Flexibilidade e eficiência | Atalho "Ver, remarcar ou cancelar" no Início; dia com vaga já selecionado; UBS ordenadas pelo horário mais cedo; tecla Enter envia formulários; avanço automático dia → mês → ano |
 | 8 | Estética e design minimalista | Uma decisão por tela; ajuda recolhida; dados de demonstração fora do app (painel ao lado) |
 | 9 | Ajudar a reconhecer e corrigir erros | Erro junto do campo, dizendo o que fazer ("Faltam números no CPF: você digitou 9 de 11"); "Esta vaga acabou" com horários próximos e fila de espera |
+| 9b | (cadastro) | Cadastro de quem não está no SIGA-Saúde: erro "não encontramos cadastro" leva a "Criar meu cadastro"; CPF já cadastrado volta para "Entrar" com os dados preenchidos; cada campo explica o que corrigir |
 | 10 | Ajuda e documentação | Seção "Precisa de ajuda?" no rodapé (SMS, sem celular, sem horário, cancelar, Disque Saúde 136); orientações para o dia da consulta |
 
 Acessibilidade (RA01/WCAG 2.1 AA): texto ajustável, alto contraste, contraste ≥ 4,5:1, foco visível, alvos de toque ≥ 44 px,

@@ -17,6 +17,7 @@ export async function api(metodo, caminho, corpo) {
   if (!r.ok) {
     const erro = new Error(dados?.erro ?? 'Não foi possível concluir agora. Tente de novo em instantes.');
     erro.status = r.status;
+    erro.dados = dados; // detalhes do servidor (ex.: qual campo está errado)
     throw erro;
   }
   return dados;

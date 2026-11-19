@@ -50,7 +50,7 @@ describe('RA01 — acesso sem e-mail', () => {
     assert.match(r1.dados.codigoDemo, /^\d{6}$/);
     const r2 = await req('POST', '/api/auth/entrar', { corpo: { cpf: p.cpf, codigo: r1.dados.codigoDemo } });
     assert.equal(r2.status, 200);
-    assert.match(r2.cookie, /sid=[\w-]+\.[\w-]+; HttpOnly/);
+    assert.match(r2.cookie, /sid=[\w-]+\.[\w-]+\.[\w-]+; HttpOnly/);
   });
 
   test('data de nascimento errada não revela se o CPF existe', async () => {
@@ -167,6 +167,77 @@ describe('RF02 — cancelar e remarcar', () => {
   });
 });
 
+describe('Cadastro de quem ainda não tem cadastro', () => {
+  const H = { 'Content-Type': 'application/json', 'X-Requested-With': 'consulta-facil' };
+  const novo = (cpfBase, extra = {}) => ({
+    nome: 'Rita de Cássia Moura', cpf: gerarCpf(cpfBase), nascimento: '1960-04-10',
+    telefone: '(11) 91234-5678', consentimento: true, ...extra,
+  });
+
+  test('cadastra só com nome, CPF, nascimento e celular, confirma por SMS e já pode agendar', async () => {
+    const dados = novo('700100200');
+    const c = await req('POST', '/api/auth/cadastro', { corpo: dados });
+    assert.equal(c.status, 200);
+    assert.match(c.dados.codigoDemo, /^\d{6}$/);
+    assert.equal(c.dados.telefone, '(11) *****-5678');
+    const e = await req('POST', '/api/auth/entrar', { corpo: { cpf: dados.cpf, codigo: c.dados.codigoDemo } });
+    assert.equal(e.status, 200);
+    const sid = e.cookie.match(/sid=([\w.-]+);/)[1];
+    const eu = await req('GET', '/api/eu', { sid });
+    assert.equal(eu.dados.nome, 'Rita de Cássia Moura');
+    const a = await req('POST', '/api/consultas', { sid, corpo: { vagaId: vagaLivre()[0].id, chave: 'chave-cadastro-novo-1' } });
+    assert.equal(a.dados.ok, true);
+    assert.equal(app.db.prepare('SELECT origem FROM pacientes WHERE cpf = ?').get(dados.cpf).origem, 'app');
+  });
+
+  test('CPF que já tem cadastro (no SIGA-Saúde) é encaminhado para "Entrar"', async () => {
+    const r = await req('POST', '/api/auth/cadastro', { corpo: novo('0', { cpf: PACIENTES_DEMO[0].cpf }) });
+    assert.equal(r.status, 409);
+    assert.equal(r.dados.jaCadastrado, true);
+  });
+
+  test('valida cada campo com mensagem clara e exige o consentimento (LGPD)', async () => {
+    const casos = [
+      [{ nome: 'Rita' }, 'nome'],
+      [{ cpf: '123.456.789-00' }, 'cpf'],
+      [{ nascimento: '2999-01-01' }, 'nascimento'],
+      [{ telefone: '1133334444' }, 'telefone'],
+      [{ consentimento: false }, 'consentimento'],
+    ];
+    for (const [extra, campo] of casos) {
+      const r = await req('POST', '/api/auth/cadastro', { corpo: novo('700100300', extra) });
+      assert.equal(r.status, 400, campo);
+      assert.equal(r.dados.campo, campo);
+    }
+  });
+
+  test('login com CPF desconhecido sugere o cadastro', async () => {
+    const r = await req('POST', '/api/auth/codigo', { corpo: { cpf: gerarCpf('700100400'), nascimento: '1970-01-01' } });
+    assert.equal(r.status, 404);
+    assert.equal(r.dados.podeCadastrar, true);
+  });
+
+  test('pré-cadastro feito numa instância funciona em outra (Vercel)', async () => {
+    const outra = criarApp({ dbPath: ':memory:', iniciarWorker: false, config: cfgTeste });
+    await new Promise((r) => outra.server.listen(0, r));
+    const base2 = `http://127.0.0.1:${outra.server.address().port}`;
+    try {
+      const dados = novo('700100500');
+      const c = await fetch(`${base}/api/auth/cadastro`, { method: 'POST', headers: H, body: JSON.stringify(dados) });
+      const otp = c.headers.get('set-cookie').match(/otp=([\w.-]+)/)[1];
+      const { codigoDemo } = await c.json();
+      const e = await fetch(`${base2}/api/auth/entrar`, { method: 'POST', headers: { ...H, Cookie: `otp=${otp}` }, body: JSON.stringify({ cpf: dados.cpf, codigo: codigoDemo }) });
+      assert.equal(e.status, 200);
+      const sid = e.headers.get('set-cookie').match(/sid=([\w.-]+);/)[1];
+      const eu2 = await fetch(`${base2}/api/eu`, { headers: { Cookie: `sid=${sid}` } });
+      assert.equal(eu2.status, 200);
+      assert.equal((await eu2.json()).nome, 'Rita de Cássia Moura');
+    } finally {
+      await outra.fechar();
+    }
+  });
+});
+
 describe('Várias instâncias do servidor (Vercel)', () => {
   test('login feito numa instância vale em outra, com banco separado (painel não "fecha")', async () => {
     const outra = criarApp({ dbPath: ':memory:', iniciarWorker: false, config: cfgTeste });
@@ -188,7 +259,7 @@ describe('Várias instâncias do servidor (Vercel)', () => {
       const { codigoDemo } = await c.json();
       const e = await fetch(`${base2}/api/auth/entrar`, { method: 'POST', headers: { ...H, Cookie: `otp=${otp}` }, body: JSON.stringify({ cpf: p.cpf, codigo: codigoDemo }) });
       assert.equal(e.status, 200);
-      const sid = e.headers.get('set-cookie').match(/sid=([\w-]+\.[\w-]+)/)[1];
+      const sid = e.headers.get('set-cookie').match(/sid=([\w-]+\.[\w-]+\.[\w-]+)/)[1];
       const eu = await fetch(`${base}/api/eu`, { headers: { Cookie: `sid=${sid}` } });
       assert.equal(eu.status, 200, 'a sessão criada na instância 2 vale na instância 1');
 

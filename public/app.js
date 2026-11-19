@@ -25,6 +25,7 @@ configurarAjustes();
 // [H4] Consistência: todas as telas têm o mesmo cabeçalho (voltar, título, texto) e as mesmas abas.
 const META = {
   entrar: { titulo: 'Consulta Fácil' },
+  cadastro: { titulo: 'Cadastro', voltar: 'entrar' },
   codigo: { titulo: 'Entrar', voltar: 'entrar' },
   inicio: { titulo: 'Consulta Fácil', aba: 'inicio' },
   especialidade: { titulo: 'Agendar', voltar: 'inicio', aba: 'agendar' },
@@ -125,30 +126,53 @@ const ficha = (pares) => pares.flatMap(([k, v]) => [el('dt', {}, k), el('dd', {}
 const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
 // ======================================================================= passos 1 e 2: entrar
-$('cpf').addEventListener('input', (e) => {
-  const d = e.target.value.replace(/\D/g, '').slice(0, 11);
-  e.target.value = d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-});
-for (const [de, para] of [['dia', 'mes'], ['mes', 'ano']]) {
+// Máscaras: o cidadão digita só números; pontos, traço e parênteses aparecem sozinhos [H5]
+const mascaraCpf = (v) => v.replace(/\D/g, '').slice(0, 11)
+  .replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+const mascaraCelular = (v) => {
+  const d = v.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : '';
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+for (const id of ['cpf', 'cpf-cad']) $(id).addEventListener('input', (e) => { e.target.value = mascaraCpf(e.target.value); });
+$('tel-cad').addEventListener('input', (e) => { e.target.value = mascaraCelular(e.target.value); });
+for (const [de, para] of [['dia', 'mes'], ['mes', 'ano'], ['dia-cad', 'mes-cad'], ['mes-cad', 'ano-cad']]) {
   $(de).addEventListener('input', (e) => { if (e.target.value.replace(/\D/g, '').length === 2) $(para).focus(); });
+}
+
+/** Lê dia/mês/ano de três campos; devolve AAAA-MM-DD ou null se a data não existe. */
+function lerData(idDia, idMes, idAno) {
+  const dia = Number($(idDia).value), mes = Number($(idMes).value), ano = Number($(idAno).value);
+  const dt = new Date(ano, mes - 1, dia);
+  const valida = ano > 1900 && dt.getFullYear() === ano && dt.getMonth() === mes - 1 && dt.getDate() === dia && dt <= new Date();
+  return valida ? `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}` : null;
+}
+
+function validarCpfCampo(id, idErro) {
+  const cpf = $(id).value.replace(/\D/g, '');
+  if (cpf.length !== 11) { erroCampo([id], idErro, `Faltam números no CPF: você digitou ${cpf.length} de 11.`); return null; }
+  if (!cpfValido(cpf)) { erroCampo([id], idErro, 'Este CPF não existe. Confira os números no seu documento.'); return null; }
+  return cpf;
 }
 
 /** [H5] Prevenção de erros: confere CPF e data antes de enviar. */
 function validarEntrada() {
   erroCampo(['cpf'], 'cpf-erro', null);
   erroCampo(['dia', 'mes', 'ano'], 'nasc-erro', null);
-  const cpf = $('cpf').value.replace(/\D/g, '');
-  if (cpf.length !== 11) { erroCampo(['cpf'], 'cpf-erro', `Faltam números no CPF: você digitou ${cpf.length} de 11.`); return null; }
-  if (!cpfValido(cpf)) { erroCampo(['cpf'], 'cpf-erro', 'Este CPF não existe. Confira os números no seu documento.'); return null; }
-  const dia = Number($('dia').value), mes = Number($('mes').value), ano = Number($('ano').value);
-  const dt = new Date(ano, mes - 1, dia);
-  const valida = ano > 1900 && dt.getFullYear() === ano && dt.getMonth() === mes - 1 && dt.getDate() === dia && dt <= new Date();
-  if (!valida) { erroCampo(['dia', 'mes', 'ano'], 'nasc-erro', 'Data inválida. Exemplo: dia 05, mês 03, ano 1950.'); return null; }
-  return { cpf, nascimento: `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}` };
+  const cpf = validarCpfCampo('cpf', 'cpf-erro');
+  if (!cpf) return null;
+  const nascimento = lerData('dia', 'mes', 'ano');
+  if (!nascimento) { erroCampo(['dia', 'mes', 'ano'], 'nasc-erro', 'Data inválida. Exemplo: dia 05, mês 03, ano 1950.'); return null; }
+  return { cpf, nascimento };
 }
 
 async function pedirCodigo() {
-  const r = await api('POST', '/api/auth/codigo', { cpf: estado.cpf, nascimento: estado.nascimento });
+  mostrarCodigoEnviado(await api('POST', '/api/auth/codigo', { cpf: estado.cpf, nascimento: estado.nascimento }));
+}
+
+/** Prepara a tela do código depois de um SMS enviado (pelo login ou pelo cadastro). */
+function mostrarCodigoEnviado(r) {
   $('codigo-info').textContent = r.smsEnviado
     ? `Enviamos um SMS para ${r.telefone}. Pode levar até 1 minuto.`
     : `Não conseguimos enviar o SMS para ${r.telefone} agora. Peça um novo código em instantes ou procure sua UBS.`;
@@ -184,13 +208,93 @@ $('form-cpf').addEventListener('submit', (ev) => {
     try {
       await pedirCodigo();
     } catch (e) {
-      if (e.status === 404) { erroCampo(['cpf'], 'cpf-erro', e.message); return; }
+      if (e.status === 404) {
+        // [H9] Diz o que fazer: conferir os dados ou, se é a primeira vez, criar o cadastro
+        erroCampo(['cpf'], 'cpf-erro', 'Não encontramos cadastro com esse CPF e essa data. Confira os dados ou, se é sua primeira vez, toque em "Criar meu cadastro".');
+        return;
+      }
       throw e;
     }
-    aviso('');
-    $('codigo').value = '';
-    erroCampo(['codigo'], 'codigo-erro', null);
-    mostrar('codigo');
+    irParaCodigo();
+  });
+});
+
+function irParaCodigo() {
+  aviso('');
+  $('codigo').value = '';
+  erroCampo(['codigo'], 'codigo-erro', null);
+  mostrar('codigo');
+}
+
+// ======================================================================= cadastro (passo 1 alternativo)
+const CAMPOS_CADASTRO = {
+  nome: [['nome-cad'], 'nome-cad-erro'],
+  cpf: [['cpf-cad'], 'cpf-cad-erro'],
+  nascimento: [['dia-cad', 'mes-cad', 'ano-cad'], 'nasc-cad-erro'],
+  telefone: [['tel-cad'], 'tel-cad-erro'],
+  consentimento: [['consentimento'], 'consentimento-erro'],
+};
+
+function limparErrosCadastro() {
+  for (const [ids, idErro] of Object.values(CAMPOS_CADASTRO)) erroCampo(ids, idErro, null);
+}
+
+/** [H5] Confere tudo antes de enviar, com a mesma regra do servidor. */
+function validarCadastro() {
+  limparErrosCadastro();
+  const nome = $('nome-cad').value.trim().replace(/\s+/g, ' ');
+  if (nome.length < 5 || !nome.includes(' ')) { erroCampo(...CAMPOS_CADASTRO.nome, 'Digite seu nome completo, com nome e sobrenome.'); return null; }
+  const cpf = validarCpfCampo('cpf-cad', 'cpf-cad-erro');
+  if (!cpf) return null;
+  const nascimento = lerData('dia-cad', 'mes-cad', 'ano-cad');
+  if (!nascimento) { erroCampo(...CAMPOS_CADASTRO.nascimento, 'Data inválida. Exemplo: dia 05, mês 03, ano 1950.'); return null; }
+  const telefone = $('tel-cad').value.replace(/\D/g, '');
+  if (!/^[1-9]{2}9\d{8}$/.test(telefone)) { erroCampo(...CAMPOS_CADASTRO.telefone, 'Digite o celular com DDD, 11 números. Exemplo: (11) 98888-7777.'); return null; }
+  if (!$('consentimento').checked) { erroCampo(...CAMPOS_CADASTRO.consentimento, 'Para continuar, marque que autoriza o uso dos dados para o agendamento.'); return null; }
+  return { nome, cpf, nascimento, telefone, consentimento: true };
+}
+
+function copiarCampos(pares) {
+  for (const [de, para] of pares) if ($(de).value && !$(para).value) $(para).value = $(de).value;
+}
+
+$('ir-cadastro').addEventListener('click', () => {
+  // Aproveita o que a pessoa já digitou no login [H6]
+  copiarCampos([['cpf', 'cpf-cad'], ['dia', 'dia-cad'], ['mes', 'mes-cad'], ['ano', 'ano-cad']]);
+  erroCampo(['cpf'], 'cpf-erro', null);
+  aviso('');
+  mostrar('cadastro');
+});
+
+$('ja-tenho').addEventListener('click', () => {
+  copiarCampos([['cpf-cad', 'cpf'], ['dia-cad', 'dia'], ['mes-cad', 'mes'], ['ano-cad', 'ano']]);
+  aviso('');
+  mostrar('entrar');
+});
+
+$('form-cadastro').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const dados = validarCadastro();
+  if (!dados) return;
+  executar(ev.submitter, async () => {
+    let r;
+    try {
+      r = await api('POST', '/api/auth/cadastro', dados);
+    } catch (e) {
+      if (e.dados?.jaCadastrado) {
+        copiarCampos([['cpf-cad', 'cpf'], ['dia-cad', 'dia'], ['mes-cad', 'mes'], ['ano-cad', 'ano']]);
+        mostrar('entrar');
+        aviso('Você já tem cadastro. Confira a data de nascimento e toque em "Receber código por SMS".');
+        return;
+      }
+      if (e.dados?.campo && CAMPOS_CADASTRO[e.dados.campo]) { erroCampo(...CAMPOS_CADASTRO[e.dados.campo], e.message); return; }
+      throw e;
+    }
+    estado.cpf = dados.cpf;
+    estado.nascimento = dados.nascimento;
+    mostrarCodigoEnviado(r);
+    irParaCodigo();
+    aviso('Cadastro criado. Agora confirme seu celular com o código do SMS.');
   });
 });
 
@@ -486,6 +590,25 @@ function configurarPainelDemo(cfg) {
     $('dia').value = d; $('mes').value = m; $('ano').value = a;
     $('cpf').focus();
   } }, `${p.nome} — CPF ${p.cpf}, nasc. ${p.nascimento}`))));
+
+  // Preenche o cadastro com dados fictícios (CPF válido gerado na hora); a autorização LGPD fica para a pessoa marcar
+  $('demo-cadastro').addEventListener('click', () => {
+    const nomes = ['Rita de Cássia Moura', 'Antônio Ferreira Lopes', 'Luana Martins Silva', 'Sebastião Alves Rocha'];
+    const base = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));
+    const dv = (arr) => { const r = (arr.reduce((s, n, i) => s + n * (arr.length + 1 - i), 0) * 10) % 11; return r === 10 ? 0 : r; };
+    base.push(dv(base));
+    base.push(dv(base));
+    if (estado.logado) { aviso('Saia da conta atual (Início → Sair) para testar um cadastro novo.', 'erro'); return; }
+    mostrar('cadastro');
+    limparErrosCadastro();
+    $('nome-cad').value = nomes[Math.floor(Math.random() * nomes.length)];
+    $('cpf-cad').value = mascaraCpf(base.join(''));
+    $('dia-cad').value = '14'; $('mes-cad').value = '08'; $('ano-cad').value = '1958';
+    $('tel-cad').value = mascaraCelular(`119${String(Math.floor(Math.random() * 1e8)).padStart(8, '0')}`);
+    $('consentimento').checked = false;
+    $('consentimento').focus();
+    aviso('Dados fictícios preenchidos. Marque a autorização e toque em "Cadastrar e receber código".');
+  });
 
   $('demo-sms').addEventListener('change', (e) => executar(null, async () => {
     await api('POST', '/api/demo/sms', { modo: e.target.checked ? 'fora_do_ar' : 'normal' });

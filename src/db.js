@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS pacientes (
   cpf TEXT NOT NULL UNIQUE,
   nascimento TEXT NOT NULL,
   nome TEXT NOT NULL,
-  telefone TEXT NOT NULL
+  telefone TEXT NOT NULL,
+  origem TEXT NOT NULL DEFAULT 'siga'       -- siga (cadastro da UBS) | app (pré-cadastro a conferir)
 );
 
 CREATE TABLE IF NOT EXISTS consultas (
@@ -128,7 +129,9 @@ export function abrirBanco(caminho) {
   if (caminho !== ':memory:') mkdirSync(dirname(caminho), { recursive: true });
   const db = new DatabaseSync(caminho);
   db.exec(SCHEMA);
+  // Bancos criados antes destas colunas: acrescenta sem apagar nada
   try { db.exec('ALTER TABLE outbox ADD COLUMN resumo TEXT'); } catch { /* coluna já existe */ }
+  try { db.exec("ALTER TABLE pacientes ADD COLUMN origem TEXT NOT NULL DEFAULT 'siga'"); } catch { /* coluna já existe */ }
   return db;
 }
 

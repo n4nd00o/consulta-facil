@@ -157,7 +157,10 @@ async function atualizarAgenda() {
   const lista = await api('GET', `/api/painel/agenda/${ubs}`);
   $('agenda').replaceChildren(...(lista.length ? lista.map((c) => el('tr', {},
     el('td', {}, fmtDataHora(c.inicio)), el('td', {}, c.especialidade), el('td', {}, c.profissional),
-    el('td', {}, c.paciente), el('td', {}, c.cpf),
+    el('td', {}, c.paciente, c.origem === 'app'
+      ? el('span', { class: 'pre-cadastro' }, 'Pré-cadastro pelo app: conferir documento e Cartão SUS')
+      : null),
+    el('td', {}, c.cpf),
     el('td', { class: c.presenca_confirmada ? 'estado-on' : 'estado-off' }, c.presenca_confirmada ? 'Confirmada' : 'Aguardando'))) :
     linhaVazia(6, 'Nenhuma consulta marcada pelo app nesta unidade.')));
 }

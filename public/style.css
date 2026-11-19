@@ -266,3 +266,4 @@ pre { white-space: pre-wrap; background: var(--superficie); border: 1px solid va
   .opcao .lado { text-align: left; }
   .opcao .seta { display: none; }
 }
+.pre-cadastro { display: block; margin-top: .2rem; font-size: .78rem; font-weight: 700; color: var(--perigo); }
