@@ -1,0 +1,148 @@
+/* Layout do app do cidadão: moldura de celular + painel da demonstração ao lado.
+   Cores vêm de style.css (paleta institucional). */
+
+body.app-cidadao { background: #e6e4dd; }
+html.contraste body.app-cidadao { background: #000; }
+
+.palco {
+  display: flex; justify-content: center; align-items: flex-start; gap: 2rem;
+  padding: 1.5rem 1rem; min-height: 100vh;
+}
+
+/* ---------- Aparelho ---------- */
+.aparelho {
+  width: 400px; height: min(840px, calc(100vh - 3rem)); flex: none;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--papel); border: 11px solid #1d2428; border-radius: 46px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+}
+html.contraste .aparelho { border-color: #fff; }
+
+.barra-status {
+  display: flex; justify-content: space-between; padding: .5rem 1.6rem .2rem;
+  background: var(--marca); color: #fff; font-size: .72rem; font-weight: 700;
+}
+
+.app-topo {
+  display: flex; align-items: center; gap: .6rem; padding: .55rem .9rem .75rem;
+  background: var(--marca); color: #fff; position: relative; z-index: 2;
+}
+html.contraste .barra-status, html.contraste .app-topo { background: #000; color: #fff; border-bottom: 1px solid #fff; }
+.app-logo { background: #fff; border-radius: 8px; padding: 2px; }
+.app-titulo { flex: 1; min-width: 0; font-weight: 700; font-size: 1.05rem; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-acoes { display: flex; gap: .4rem; }
+.icone-btn {
+  min-width: 44px; height: 44px; padding: 0 .4rem; border-radius: 10px; cursor: pointer;
+  background: transparent; color: #fff; border: 2px solid rgba(255, 255, 255, .75);
+  font: inherit; font-weight: 700; font-size: .95rem;
+}
+.icone-btn:hover { background: rgba(255, 255, 255, .12); }
+.icone-btn[aria-pressed="true"] { background: #fff; color: #000; }
+#voltar { font-size: 1.5rem; line-height: 1; }
+
+.app-conteudo { flex: 1; overflow-y: auto; padding: 1.1rem 1rem 1.5rem; }
+.app-conteudo h1 { font-size: 1.4rem; margin: .1rem 0 .6rem; }
+.passo { margin: 0; font-size: .85rem; color: var(--suave); }
+.texto-apoio { color: var(--suave); margin: 0 0 .75rem; }
+.rotulo-secao { font-size: 1rem; margin: 1.1rem 0 .5rem; }
+.botao.bloco { margin-top: .75rem; }
+.botao.secundario { background: var(--superficie); }
+.app-conteudo .data { max-width: none; }
+.rodape-app { font-size: .85rem; color: var(--suave); margin-top: 1.25rem; }
+.app-conteudo .ajuda { margin-top: 1.25rem; border-top: 1px solid var(--linha); padding-top: .25rem; }
+
+/* ---------- Cartões e opções ---------- */
+.cartao {
+  background: var(--superficie); border: 1px solid var(--linha-forte); border-radius: 12px; padding: .9rem 1rem;
+}
+.cartao.ativo { border: 2px solid var(--marca); }
+.cartao .rotulo { font-size: .8rem; color: var(--suave); margin: 0; }
+.cartao p { margin: .1rem 0; }
+.cartao .titulo-cartao { font-weight: 700; display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; }
+.destaque-ok { border: 2px solid var(--sucesso); }
+.etiqueta {
+  display: inline-block; font-size: .75rem; font-weight: 700; padding: .05rem .55rem;
+  border: 1.5px solid currentColor; border-radius: 999px; color: var(--marca);
+}
+.etiqueta.cancelada { color: var(--suave); }
+.etiqueta.ok { color: var(--sucesso); }
+.lembrete { color: var(--suave); font-size: .95rem; margin-top: .6rem !important; }
+.acoes-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .6rem; }
+.acoes-2 .botao { min-height: 46px; padding: .4rem; }
+.cartao .botao.principal.bloco { margin-top: .6rem; }
+
+.app-conteudo .opcoes { gap: .55rem; margin: .5rem 0; }
+.escolha-btn {
+  display: flex; justify-content: space-between; align-items: center; gap: .75rem; width: 100%;
+  text-align: left; font: inherit; color: var(--texto); cursor: pointer;
+  background: var(--superficie); border: 1.5px solid var(--linha-forte); border-radius: 12px; padding: .75rem .9rem;
+}
+.escolha-btn:hover:not(:disabled) { border-color: var(--marca); }
+.escolha-btn .nome { display: block; font-weight: 700; }
+.escolha-btn .det { display: block; font-size: .85rem; color: var(--suave); }
+.escolha-btn[aria-pressed="true"] { border: 2.5px solid var(--marca); background: var(--marca-clara); }
+.escolha-btn:disabled { cursor: not-allowed; background: transparent; border-style: dashed; }
+.escolha-btn:disabled .nome { color: var(--suave); text-decoration: line-through; }
+
+.chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.chip {
+  font: inherit; font-weight: 700; font-size: .9rem; cursor: pointer; padding: .45rem .3rem; min-height: 46px;
+  background: var(--superficie); color: var(--texto); border: 1.5px solid var(--linha-forte); border-radius: 12px;
+}
+.chip[aria-pressed="true"] { border: 2.5px solid var(--marca); background: var(--marca-clara); }
+.chip .qtd { display: block; font-weight: 400; font-size: .72rem; color: var(--suave); }
+
+/* ---------- Abas ---------- */
+.abas {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  background: var(--superficie); border-top: 1px solid var(--linha-forte);
+}
+.abas button {
+  display: flex; flex-direction: column; align-items: center; gap: .15rem; cursor: pointer;
+  background: none; border: 0; border-top: 4px solid transparent; padding: .45rem 0 .6rem;
+  font: inherit; font-size: .8rem; font-weight: 600; color: var(--suave); min-height: 56px;
+}
+.abas svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.abas button[aria-current="page"] { border-top-color: var(--marca); color: var(--marca); font-weight: 700; }
+
+/* ---------- Painel da demonstração ---------- */
+.painel-demo {
+  width: 360px; flex: none; position: sticky; top: 1.5rem;
+  background: var(--superficie); border: 2px dashed var(--linha-forte); border-radius: 14px;
+  padding: 1rem 1.15rem; font-size: .92rem;
+}
+.painel-demo h2 { font-size: 1.05rem; margin: 0; }
+.painel-demo h3 { font-size: 1rem; margin: 1.1rem 0 .4rem; }
+.demo-sub { margin: .1rem 0 .8rem; color: var(--suave); }
+.demo-opcao { display: flex; gap: .6rem; align-items: flex-start; margin: .5rem 0; }
+.demo-opcao label { font-weight: 400; cursor: pointer; }
+.demo-opcao input { width: 20px; height: 20px; margin: .15rem 0 0; flex: none; accent-color: var(--marca); }
+.demo-mensagens { padding-left: 1.1rem; margin: 0; }
+.demo-mensagens li { margin: .3rem 0; }
+.demo-mensagens .falha { color: var(--perigo); }
+.demo-nota { color: var(--suave); font-size: .85rem; }
+.demo-nota strong { display: block; color: var(--texto); margin-top: .3rem; }
+.demo-pacientes summary { cursor: pointer; font-weight: 700; min-height: 40px; display: flex; align-items: center; }
+.demo-pacientes ul { list-style: none; padding: 0; margin: .25rem 0; }
+.demo-pacientes li button {
+  width: 100%; text-align: left; font: inherit; font-size: .85rem; cursor: pointer; margin: .2rem 0; padding: .45rem .6rem;
+  background: var(--papel); color: var(--texto); border: 1px solid var(--linha-forte); border-radius: 8px;
+}
+
+.apenas-estreito { display: none; }
+
+/* ---------- Celular de verdade: sem moldura, painel abaixo ---------- */
+@media (max-width: 860px) {
+  .palco { flex-direction: column; align-items: stretch; padding: 0; gap: 0; }
+  .aparelho { width: 100%; height: auto; min-height: 100vh; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+  .barra-status { display: none; }
+  .app-topo { position: sticky; top: 0; }
+  .app-conteudo { overflow: visible; }
+  .abas { position: sticky; bottom: 0; }
+  .painel-demo { width: auto; position: static; margin: 1rem; }
+  .apenas-estreito { display: block; }
+}
+@media (max-width: 380px) {
+  .app-logo { display: none; }
+  .icone-btn { min-width: 40px; }
+}

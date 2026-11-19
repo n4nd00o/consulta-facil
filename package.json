@@ -1,0 +1,11 @@
+{
+  "name": "consulta-facil",
+  "version": "1.0.0",
+  "description": "Consulta Fácil — agendamento de consultas nas UBS de Vale Verde (monólito modular, sem dependências externas)",
+  "type": "module",
+  "engines": { "node": "24.x" },
+  "scripts": {
+    "start": "node --no-warnings src/server.js",
+    "test": "node --no-warnings --test test/*.test.js"
+  }
+}

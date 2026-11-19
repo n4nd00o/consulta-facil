@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel da UBS — Consulta Fácil</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="painel">
+  <a class="pular" href="#conteudo">Ir para o conteúdo</a>
+  <div class="faixa">
+    <div class="faixa-in">
+      <span>Prefeitura Municipal de Vale Verde · Secretaria de Saúde · Uso interno</span>
+      <div class="acess" role="group" aria-label="Acessibilidade">
+        <span aria-hidden="true">Texto</span>
+        <button type="button" id="diminuir" aria-label="Diminuir o texto">A−</button>
+        <button type="button" id="aumentar" aria-label="Aumentar o texto">A+</button>
+        <button type="button" id="contraste" aria-pressed="false">Alto contraste</button>
+      </div>
+    </div>
+  </div>
+  <header class="cabecalho">
+    <div class="cab-in">
+      <a class="marca" href="/painel">
+        <img src="/logo.svg" alt="" width="38" height="38">
+        <span><strong>Consulta Fácil</strong><small>Painel da equipe da UBS e da Secretaria</small></span>
+      </a>
+      <a href="/">Abrir o app do cidadão</a>
+    </div>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+    <div id="aviso" role="status" aria-live="polite" class="aviso" hidden></div>
+
+    <section id="login" hidden>
+      <h1>Acesso da equipe</h1>
+      <p class="lead">Área restrita a profissionais da UBS e da Secretaria de Saúde. Os acessos ficam registrados.</p>
+      <form id="form-login" class="form-login" novalidate>
+        <div class="campo">
+          <label for="senha">Senha do painel</label>
+          <input id="senha" type="password" autocomplete="current-password" aria-describedby="senha-erro">
+          <p id="senha-erro" class="erro-campo" hidden></p>
+        </div>
+        <button class="botao principal bloco" type="submit">Entrar</button>
+      </form>
+    </section>
+
+    <div id="painel" hidden>
+      <nav class="atalhos" aria-label="Seções do painel">
+        <a href="#visao">Visão geral</a>
+        <a href="#unidades-sec">Unidades</a>
+        <a href="#sms-sec">SMS</a>
+        <a href="#falhas-sec">Ligar para pacientes</a>
+        <a href="#alertas-sec">Alertas</a>
+        <a href="#agenda-sec">Agenda da recepção</a>
+        <a href="#migracao-sec">Migração</a>
+      </nav>
+
+      <section class="secao" id="visao">
+        <div class="titulo-painel">
+          <h1>Visão geral</h1>
+          <span class="atualizado" id="atualizado"></span>
+        </div>
+        <p class="lead">Números do agendamento, não só do servidor: mostram quantas pessoas conseguiram marcar e quantas mensagens não chegaram.</p>
+        <div id="indicadores" class="indicadores"></div>
+      </section>
+
+      <div class="grade2">
+        <section class="secao" id="unidades-sec">
+          <h2>Unidades no Consulta Fácil</h2>
+          <p class="ajuda-campo">Liberação gradual: o piloto começa com 3 UBS. Desligar uma unidade a esconde do cidadão na hora, sem apagar nenhuma consulta.</p>
+          <div class="tabela"><table>
+            <thead><tr><th scope="col">UBS</th><th scope="col">Horários livres</th><th scope="col">Situação</th><th scope="col">Ação</th></tr></thead>
+            <tbody id="unidades"></tbody>
+          </table></div>
+        </section>
+
+        <section class="secao" id="sms-sec">
+          <h2>Envio de SMS</h2>
+          <p id="circuito" class="circuito"></p>
+          <div class="linha" id="simulacao" hidden>
+            <label for="modo-sms">Simular provedor de SMS:</label>
+            <select id="modo-sms">
+              <option value="normal">Funcionando</option>
+              <option value="fora_do_ar">Fora do ar (como no piloto)</option>
+              <option value="lento">Lento (testa o limite de 5 s)</option>
+            </select>
+          </div>
+          <div id="caixa-wrap" hidden>
+            <h3>Últimos SMS entregues (simulação)</h3>
+            <div class="tabela"><table><thead><tr><th scope="col">Hora</th><th scope="col">Telefone</th><th scope="col">Mensagem</th></tr></thead><tbody id="caixa"></tbody></table></div>
+          </div>
+        </section>
+      </div>
+
+      <section class="secao" id="falhas-sec">
+        <h2>SMS que não chegaram — ligar para o paciente</h2>
+        <p class="ajuda-campo">Depois de 5 tentativas, a mensagem vem para esta lista. A consulta continua marcada: ligue para avisar, principalmente para pessoas idosas.</p>
+        <div class="linha"><button type="button" class="botao" id="reenviar">Tentar enviar todas de novo</button></div>
+        <div class="tabela"><table>
+          <thead><tr><th scope="col">Paciente</th><th scope="col">Telefone</th><th scope="col">Mensagem</th><th scope="col">Motivo</th><th scope="col">Ação</th></tr></thead>
+          <tbody id="falhas"></tbody>
+        </table></div>
+      </section>
+
+      <section class="secao" id="alertas-sec">
+        <h2>Alertas</h2>
+        <p class="ajuda-campo">Pacientes com 3 cancelamentos tardios em 30 dias. O paciente não é bloqueado: a UBS entra em contato para entender o motivo.</p>
+        <div class="tabela"><table>
+          <thead><tr><th scope="col">UBS</th><th scope="col">Paciente</th><th scope="col">Telefone</th><th scope="col">Alerta</th><th scope="col">Ação</th></tr></thead>
+          <tbody id="alertas"></tbody>
+        </table></div>
+      </section>
+
+      <section class="secao" id="agenda-sec">
+        <h2>Agenda da recepção</h2>
+        <div class="linha"><label for="ubs-agenda">Unidade:</label><select id="ubs-agenda"></select></div>
+        <div class="tabela"><table>
+          <thead><tr><th scope="col">Horário</th><th scope="col">Atendimento</th><th scope="col">Profissional</th><th scope="col">Paciente</th><th scope="col">CPF</th><th scope="col">Presença</th></tr></thead>
+          <tbody id="agenda"></tbody>
+        </table></div>
+      </section>
+
+      <section class="secao" id="migracao-sec">
+        <h2>Migração do SIGA-Saúde</h2>
+        <p class="ajuda-campo">O ensaio faz a migração completa e desfaz tudo no final, mostrando o relatório de conferência. A migração real não duplica nem apaga horários e pode ser repetida com segurança.</p>
+        <div class="linha">
+          <button type="button" class="botao" id="ensaio">Fazer ensaio</button>
+          <button type="button" class="botao principal" id="migrar">Migrar de verdade</button>
+        </div>
+        <div id="relatorio"></div>
+      </section>
+    </div>
+  </main>
+  <script src="/painel.js" type="module"></script>
+</body>
+</html>

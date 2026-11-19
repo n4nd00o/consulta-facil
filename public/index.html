@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consulta Fácil — Prefeitura de Vale Verde</title>
+  <link rel="icon" href="/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body class="app-cidadao">
+  <a class="pular" href="#conteudo">Ir para o conteúdo</a>
+
+  <div class="palco">
+    <!-- O app: dentro de uma moldura de celular no computador; tela cheia no celular -->
+    <div class="aparelho">
+      <div class="barra-status" aria-hidden="true"><span>9:41</span><span>5G ▮▮▮</span></div>
+
+      <header class="app-topo">
+        <button type="button" class="icone-btn" id="voltar" aria-label="Voltar" hidden>‹</button>
+        <img src="/logo.svg" alt="" class="app-logo" id="app-logo" width="30" height="30">
+        <span class="app-titulo" id="app-titulo">Consulta Fácil</span>
+        <div class="app-acoes" role="group" aria-label="Tamanho do texto e contraste">
+          <button type="button" class="icone-btn" id="diminuir" aria-label="Diminuir o texto">A−</button>
+          <button type="button" class="icone-btn" id="aumentar" aria-label="Aumentar o texto">A+</button>
+          <button type="button" class="icone-btn" id="contraste" aria-pressed="false" aria-label="Alto contraste">◐</button>
+        </div>
+      </header>
+
+      <main id="conteudo" class="app-conteudo" tabindex="-1">
+        <div id="aviso" role="status" aria-live="polite" class="aviso" hidden></div>
+
+        <!-- Passo 1: identificação, sem e-mail -->
+        <section id="tela-entrar" class="tela" hidden>
+          <p class="passo">Passo 1 de 5</p>
+          <h1 tabindex="-1">Marque sua consulta sem pegar fila</h1>
+          <p class="texto-apoio">Informe seu CPF e sua data de nascimento. Não é preciso e-mail nem senha.</p>
+          <form id="form-cpf" novalidate>
+            <div class="campo">
+              <label for="cpf">CPF</label>
+              <input id="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" aria-describedby="cpf-dica cpf-erro">
+              <p id="cpf-dica" class="ajuda-campo">Somente números.</p>
+              <p id="cpf-erro" class="erro-campo" hidden></p>
+            </div>
+            <fieldset aria-describedby="nasc-erro">
+              <legend>Data de nascimento</legend>
+              <div class="data">
+                <div><label for="dia">Dia</label><input id="dia" inputmode="numeric" maxlength="2" placeholder="DD"></div>
+                <div><label for="mes">Mês</label><input id="mes" inputmode="numeric" maxlength="2" placeholder="MM"></div>
+                <div><label for="ano">Ano</label><input id="ano" inputmode="numeric" maxlength="4" placeholder="AAAA"></div>
+              </div>
+              <p id="nasc-erro" class="erro-campo" hidden></p>
+            </fieldset>
+            <button class="botao principal bloco" type="submit">Receber código por SMS</button>
+          </form>
+          <p class="ajuda-campo">Não tem celular? A recepção da sua UBS marca a consulta para você.</p>
+        </section>
+
+        <!-- Passo 2: código -->
+        <section id="tela-codigo" class="tela" hidden>
+          <p class="passo">Passo 2 de 5</p>
+          <h1 tabindex="-1">Digite o código do SMS</h1>
+          <p class="texto-apoio" id="codigo-info"></p>
+          <p class="nota apenas-estreito" id="codigo-demo" hidden></p>
+          <form id="form-codigo" novalidate>
+            <div class="campo">
+              <label for="codigo">Código de 6 números</label>
+              <input id="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-describedby="codigo-dica codigo-erro">
+              <p id="codigo-dica" class="ajuda-campo">O código vale por 10 minutos.</p>
+              <p id="codigo-erro" class="erro-campo" hidden></p>
+            </div>
+            <button class="botao principal bloco" type="submit">Entrar</button>
+          </form>
+          <button type="button" class="botao bloco secundario" id="reenviar" disabled>Reenviar código</button>
+        </section>
+
+        <!-- Início -->
+        <section id="tela-inicio" class="tela" hidden>
+          <h1 tabindex="-1" id="saudacao">Olá! O que você precisa hoje?</h1>
+          <div id="destaque"></div>
+          <button class="botao principal bloco" type="button" id="ir-agendar">Agendar consulta</button>
+          <button class="botao bloco secundario" type="button" id="ir-consultas">Ver, remarcar ou cancelar</button>
+          <details class="ajuda">
+            <summary>Precisa de ajuda?</summary>
+            <dl>
+              <dt>Não recebi o SMS</dt>
+              <dd>Espere 1 minuto e peça um novo código. Se o celular estiver errado, procure a recepção da UBS.</dd>
+              <dt>Não encontro horário</dt>
+              <dd>Entre na fila de espera: quando alguém cancelar, você recebe um SMS.</dd>
+              <dt>Não vou poder ir</dt>
+              <dd>Em "Consultas", toque em "Cancelar" para liberar a vaga para outra pessoa.</dd>
+              <dt>Outras dúvidas</dt>
+              <dd>Disque Saúde 136 ou a recepção da sua UBS.</dd>
+            </dl>
+          </details>
+          <p class="rodape-app">Usamos só CPF, nascimento e celular, apenas para o agendamento (LGPD).
+            <button type="button" class="link-botao" id="sair">Sair</button></p>
+        </section>
+
+        <!-- Passo 3: atendimento -->
+        <section id="tela-especialidade" class="tela" hidden>
+          <p class="passo">Passo 3 de 5</p>
+          <h1 tabindex="-1">Qual consulta você precisa?</h1>
+          <div id="opcoes-especialidade" class="opcoes"></div>
+        </section>
+
+        <!-- Passo 4: unidade, dia e horário -->
+        <section id="tela-horario" class="tela" hidden>
+          <p class="passo">Passo 4 de 5</p>
+          <h1 tabindex="-1" id="titulo-horario"></h1>
+          <p class="texto-apoio" id="remarcando-info" hidden></p>
+          <h2 class="rotulo-secao" id="rotulo-unidade">Unidade</h2>
+          <div id="opcoes-ubs" class="opcoes" role="group" aria-labelledby="rotulo-unidade"></div>
+          <div id="bloco-dias" hidden>
+            <h2 class="rotulo-secao" id="rotulo-dia">Dia</h2>
+            <div id="opcoes-dia" class="chips" role="group" aria-labelledby="rotulo-dia"></div>
+          </div>
+          <div id="bloco-horas" hidden>
+            <h2 class="rotulo-secao" id="rotulo-hora">Horário</h2>
+            <div id="opcoes-hora" class="opcoes" role="group" aria-labelledby="rotulo-hora"></div>
+          </div>
+          <div id="bloco-fila"></div>
+          <button type="button" class="botao bloco secundario" data-voltar>Voltar</button>
+        </section>
+
+        <!-- Passo 5: confirmação -->
+        <section id="tela-confirmar" class="tela" hidden>
+          <p class="passo">Passo 5 de 5</p>
+          <h1 tabindex="-1" id="titulo-confirmar">Confira e confirme</h1>
+          <div class="cartao"><dl class="ficha" id="confirmacao-dados"></dl></div>
+          <button class="botao principal bloco" type="button" id="confirmar">Confirmar consulta</button>
+          <button class="botao bloco secundario" type="button" data-voltar>Escolher outro horário</button>
+        </section>
+
+        <!-- Concluído -->
+        <section id="tela-ok" class="tela" hidden>
+          <div class="sucesso-cabeca" id="ok-cabeca"><h1 tabindex="-1" id="ok-titulo">Consulta marcada</h1></div>
+          <div class="cartao destaque-ok"><dl class="ficha" id="ok-dados"></dl></div>
+          <p class="texto-apoio">A confirmação também vai por SMS. Se a mensagem não chegar, a consulta continua marcada.</p>
+          <ul class="orientacoes">
+            <li>Chegue 15 minutos antes.</li>
+            <li>Leve documento com foto e Cartão SUS.</li>
+          </ul>
+          <button class="botao principal bloco" type="button" id="ok-consultas">Ver minhas consultas</button>
+        </section>
+
+        <!-- Minhas consultas -->
+        <section id="tela-consultas" class="tela" hidden>
+          <h1 tabindex="-1">Minhas consultas</h1>
+          <div id="lista-consultas" class="lista"></div>
+          <div id="secao-filas" hidden>
+            <h2 class="rotulo-secao">Fila de espera</h2>
+            <div id="lista-filas" class="lista"></div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="abas" id="abas" aria-label="Navegação principal" hidden>
+        <button type="button" data-aba="inicio">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>Início
+        </button>
+        <button type="button" data-aba="agendar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M12 10v6M9 13h6"/></svg>Agendar
+        </button>
+        <button type="button" data-aba="consultas">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg>Consultas
+        </button>
+      </nav>
+    </div>
+
+    <!-- Painel da demonstração: fora do app -->
+    <aside class="painel-demo" id="painel-demo" aria-labelledby="demo-titulo" hidden>
+      <h2 id="demo-titulo">Painel da demonstração</h2>
+      <p class="demo-sub">Não faz parte do app: simula os problemas do piloto.</p>
+      <div class="demo-opcao"><input type="checkbox" id="demo-outra"><label for="demo-outra">Outra pessoa confirma a mesma vaga um instante antes de mim</label></div>
+      <div class="demo-opcao"><input type="checkbox" id="demo-sms"><label for="demo-sms">Provedor de SMS fora do ar</label></div>
+      <button type="button" class="botao bloco" id="demo-segundo-clique">Simular segundo clique em "Cancelar"</button>
+
+      <h3>Fila de mensagens (outbox)</h3>
+      <ul id="demo-mensagens" class="demo-mensagens"><li>Nenhuma mensagem ainda.</li></ul>
+
+      <p class="demo-nota">Vagas: cada confirmação reduz 1 vaga e nunca passa de zero.
+        <strong id="demo-codigo"></strong></p>
+
+      <details class="demo-pacientes" id="demo-pacientes">
+        <summary>Pacientes fictícios para entrar</summary>
+        <ul id="lista-demo"></ul>
+      </details>
+      <p class="demo-nota"><a href="/painel">Abrir o painel da equipe da UBS</a></p>
+    </aside>
+  </div>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

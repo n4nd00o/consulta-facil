@@ -1,0 +1,9 @@
+node_modules/
+data/
+.vercel/
+.claude/
+.env*
+*.log
+
+# Cópia antiga duplicada (não faz parte do projeto)
+/consulta-facil/
