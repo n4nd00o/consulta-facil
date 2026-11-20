@@ -120,16 +120,17 @@ export class WorkerNotificacoes {
         this.db.prepare(`UPDATE outbox SET status = 'enviada', tentativas = tentativas + 1, enviada_em = ?, ultimo_erro = NULL WHERE id = ?`)
           .run(agora(), msg.id);
       } catch (e) {
-        this.circuito.falha();
-        this.registrarFalha(msg, e.message);
+        // Erro permanente (ex.: número inválido) = o provedor respondeu: não conta para o circuit breaker
+        if (e.permanente) this.circuito.sucesso(); else this.circuito.falha();
+        this.registrarFalha(msg, e.message, e.permanente);
       }
       if (emProva) return; // meio-aberto: só uma chamada de prova por ciclo
     }
   }
 
-  registrarFalha(msg, erro) {
+  registrarFalha(msg, erro, permanente = false) {
     const tentativas = msg.tentativas + 1;
-    if (tentativas >= this.cfg.smsMaxTentativas) {
+    if (permanente || tentativas >= this.cfg.smsMaxTentativas) {
       this.db.prepare(`UPDATE outbox SET status = 'falhou', tentativas = ?, ultimo_erro = ? WHERE id = ?`).run(tentativas, erro, msg.id);
       return;
     }
@@ -146,7 +147,8 @@ export class WorkerNotificacoes {
       this.circuito.sucesso();
       return { enviado: true };
     } catch (e) {
-      this.circuito.falha();
+      if (e.permanente) this.circuito.sucesso(); else this.circuito.falha();
+      console.warn('[sms] código não enviado:', e.message);
       return { enviado: false, motivo: e.message };
     }
   }

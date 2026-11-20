@@ -90,6 +90,10 @@ async function atualizarResumo() {
     ? `${texto} Nova tentativa às ${new Date(c.abertoAte).toLocaleTimeString('pt-BR')}.`
     : texto;
   $('modo-sms').value = n.modoProvedor;
+  const nomes = { simulado: 'Simulado (nenhuma mensagem sai do servidor)', 'twilio-sms': 'Twilio — SMS real', 'twilio-whatsapp': 'Twilio — WhatsApp real' };
+  $('provedor-sms').textContent = `Provedor: ${nomes[n.provedor] ?? n.provedor}`;
+  $('aviso-provedor').hidden = !n.avisoProvedor;
+  $('aviso-provedor').textContent = n.avisoProvedor ?? '';
   $('atualizado').textContent = `Atualizado às ${new Date().toLocaleTimeString('pt-BR')}`;
 }
 

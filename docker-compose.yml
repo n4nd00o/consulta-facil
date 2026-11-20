@@ -1,0 +1,18 @@
+# Uso:  docker compose up -d --build   →   http://localhost:3000   (painel: /painel)
+# Configuração (SMS real, senha do painel...): copie .env.example para .env e preencha.
+services:
+  app:
+    build: .
+    image: consulta-facil
+    container_name: consulta-facil
+    ports:
+      - "${PORTA:-3000}:3000"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - dados:/app/data   # o banco sobrevive a reinícios e atualizações do container
+    restart: unless-stopped
+
+volumes:
+  dados:

@@ -55,6 +55,7 @@ export function resumo(db, { medidor, worker }) {
     notificacoes: {
       pendentes: out.pendente ?? 0, enviadas: out.enviada ?? 0, falharam: out.falhou ?? 0, contatados: out.contatado ?? 0,
       circuito: worker.circuito.snapshot(), modoProvedor: worker.provedor.modo,
+      provedor: worker.provedor.nome, avisoProvedor: worker.provedor.aviso ?? null,
     },
     desempenho: { p95ms: medidor.p95(), requisicoes: medidor.total, erros5xx: medidor.erros5xx },
     alertasAbertos: Number(db.prepare('SELECT COUNT(*) AS n FROM alertas WHERE resolvido = 0').get().n),

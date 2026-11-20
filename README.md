@@ -72,6 +72,14 @@ O mesmo código roda localmente (`npm start`) e na Vercel:
   assinado (HMAC)** no cookie, que vale em qualquer cópia; o banco guarda só a lista de sessões encerradas.
   A chave fica na variável `SESSAO_SEGREDO` (já configurada no projeto da Vercel; localmente é gerada a cada início).
 - Variável opcional no painel da Vercel: `PAINEL_SENHA` (senha do painel da equipe; padrão de demonstração `ubs123`).
+
+## SMS real e Docker
+
+- **SMS/WhatsApp de verdade:** `SMS_PROVEDOR=twilio` + credenciais do Twilio (veja `.env.example` e a
+  seção 12 do COMO-USAR). Sem credenciais, o app usa o provedor simulado. Número inválido ou não verificado
+  (erro 4xx) é **falha permanente**: vai direto para a lista "ligar para o paciente" e não abre o circuit
+  breaker. Provedor fora do ar (5xx/timeout) é **falha temporária**: retenta com espera crescente.
+- **Docker:** `docker compose up -d --build`; o banco fica num volume e é **permanente** (seção 13 do COMO-USAR).
 - Cada `git push` na branch `main` publica automaticamente uma nova versão.
 
 ## Simular as falhas do piloto (painel → "Simular provedor")

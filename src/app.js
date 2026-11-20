@@ -8,7 +8,7 @@ import { abrirBanco } from './db.js';
 import { config as configPadrao } from './config.js';
 import { SigaSaudeAdapter, criarLegadoSimulado, PACIENTES_DEMO } from './modules/siga-adapter.js';
 import { migrarDoLegado } from './modules/migracao.js';
-import { SmsProviderSimulado } from './modules/sms-provider.js';
+import { criarProvedor } from './modules/sms-provider.js';
 import { WorkerNotificacoes } from './modules/notificacoes.js';
 import * as pacientes from './modules/pacientes.js';
 import * as agenda from './modules/agenda.js';
@@ -32,7 +32,15 @@ export function criarApp(opcoes = {}) {
   const cfg = { ...configPadrao, ...opcoes.config };
   const db = abrirBanco(opcoes.dbPath ?? cfg.dbPath);
   const adapter = opcoes.adapter ?? new SigaSaudeAdapter(criarLegadoSimulado());
-  const provedor = opcoes.provedor ?? new SmsProviderSimulado();
+  // Provedor de SMS pelas variáveis de ambiente (SMS_PROVEDOR=twilio + credenciais); padrão: simulado
+  let provedor = opcoes.provedor;
+  if (!provedor) {
+    const escolha = criarProvedor(process.env, { timeoutMs: cfg.smsTimeoutMs });
+    provedor = escolha.provedor;
+    provedor.aviso = escolha.aviso;
+    if (escolha.aviso) console.warn(`[sms] ${escolha.aviso}`);
+    else console.log(`[sms] provedor: ${provedor.nome}`);
+  }
   const worker = new WorkerNotificacoes(db, provedor, cfg);
   const medidor = new painel.MedidorLatencia();
   const ctx = { db, adapter, notificacoes: worker, cfg };
@@ -128,7 +136,10 @@ function criarRotas(ctx) {
     'GET /api/demo/estado': ({ sessao }) => {
       exigirDemo();
       const pacienteId = sessao?.perfil === 'cidadao' ? sessao.paciente_id : null;
-      return { modoSms: provedor.modo, circuito: worker.circuito.snapshot().estado, mensagens: demonstracao.filaDeMensagens(db, pacienteId, cfg) };
+      return {
+        modoSms: provedor.modo, provedor: provedor.nome, circuito: worker.circuito.snapshot().estado,
+        mensagens: demonstracao.filaDeMensagens(db, pacienteId, cfg),
+      };
     },
     'POST /api/demo/sms': ({ body }) => {
       exigirDemo();

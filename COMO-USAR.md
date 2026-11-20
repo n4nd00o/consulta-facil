@@ -263,7 +263,68 @@ consulta-facil/
 
 ## 11. Limitações do protótipo
 
-- SMS/WhatsApp e SIGA-Saúde são **simulados**. Em produção, troca-se o `SmsProviderSimulado` por um
-  cliente do provedor contratado e o legado simulado pelo acesso ao banco real (só no `SigaSaudeAdapter`).
+- O **SIGA-Saúde é simulado** (o legado real não tem API); trocar pelo banco real afeta só o `SigaSaudeAdapter`.
+- O **SMS já tem envio real pronto (Twilio)**, mas vem desligado: sem credenciais, o app usa o modo simulado.
+  Veja a seção 12.
+- **Vercel:** o banco é temporário (veja o README). **Docker:** o banco é permanente (seção 13).
 - Pipeline de CI/CD, backup PITR e testes de carga com 4 mil usuários (questões 5 e 6) estão descritos
   no documento, mas não fazem parte deste protótipo.
+
+---
+
+## 12. Ligar o SMS de verdade (Twilio)
+
+O código de envio real já está pronto e testado (`src/modules/sms-provider.js`). Só faltam as suas credenciais.
+O Twilio dá um crédito de teste ao criar a conta; na conta de teste, ele só envia para **números verificados**.
+
+### O que você precisa fazer (uma vez)
+1. Crie a conta em https://www.twilio.com/try-twilio e confirme seu e-mail e seu celular.
+2. No Console do Twilio, copie o **Account SID** e o **Auth Token** (ficam na página inicial).
+3. **Para SMS:** em *Phone Numbers → Buy a number*, pegue o número gratuito da conta de teste (formato `+1...`).
+   Em *Verified Caller IDs*, cadastre os celulares que vão receber os SMS (o seu e o do grupo).
+4. **Para WhatsApp (opcional, no lugar do SMS):** em *Messaging → Try it out → Send a WhatsApp message*,
+   envie do seu WhatsApp a mensagem `join <código>` para o número do sandbox (+1 415 523 8886).
+
+### Rodando localmente ou no Docker
+Copie `.env.example` para `.env` e preencha:
+```
+SMS_PROVEDOR=twilio
+SMS_CANAL=sms            # ou whatsapp
+TWILIO_ACCOUNT_SID=ACxxxxxxxx...
+TWILIO_AUTH_TOKEN=xxxxxxxx...
+TWILIO_FROM=+1XXXXXXXXXX # para WhatsApp: whatsapp:+14155238886
+```
+Depois, `docker compose up -d --build`. Para rodar sem Docker, use `node --env-file=.env --no-warnings src/server.js`.
+
+### Na Vercel
+Rode na pasta do projeto. Cada comando pede o valor: cole quando pedir, e ele não aparece na tela.
+```powershell
+npx vercel env add SMS_PROVEDOR production       # digite: twilio
+npx vercel env add TWILIO_ACCOUNT_SID production
+npx vercel env add TWILIO_AUTH_TOKEN production --sensitive
+npx vercel env add TWILIO_FROM production
+npx vercel deploy --prod
+```
+
+### Como conferir
+- No **painel da equipe** (`/painel` → Envio de SMS) aparece `Provedor: Twilio — SMS real`. Se faltar alguma
+  variável, aparece um aviso em vermelho dizendo qual, e o app continua no modo simulado.
+- **Cadastre-se** no app com o seu celular verificado: o código chega por SMS.
+- Os pacientes de demonstração têm celulares inventados. Na conta de teste, o Twilio recusa esses envios
+  (erro 21608): eles vão direto para "SMS que não chegaram", **sem** derrubar o envio dos demais.
+  O código continua aparecendo na tela enquanto `DEMO=1`.
+
+---
+
+## 13. Rodar com Docker (banco permanente)
+
+Com o Docker Desktop aberto, na pasta do projeto:
+```powershell
+docker compose up -d --build     # sobe em http://localhost:3000 (painel em /painel)
+docker compose logs -f           # ver o que está acontecendo (Ctrl + C para sair)
+docker compose down              # parar (os dados continuam guardados)
+docker compose down -v           # parar E apagar os dados (recomeça a demonstração)
+```
+- Os dados ficam no volume `dados` e sobrevivem a reinícios e atualizações.
+- Porta ocupada? Use outra: `$env:PORTA = "3100"; docker compose up -d --build`.
+- Testes dentro do container: `docker exec consulta-facil sh -c "node --test test/*.test.js"`.

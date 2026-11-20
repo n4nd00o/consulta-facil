@@ -1,0 +1,12 @@
+.git
+.gitignore
+.vercel
+.claude
+.env
+.env.*
+node_modules
+data
+consulta-facil
+*.md
+Dockerfile
+docker-compose.yml
