@@ -112,6 +112,12 @@ describe('RF01 — agendar (cadeia de rastreabilidade: última vaga)', () => {
     const pend = app.db.prepare("SELECT COUNT(*) AS n FROM outbox WHERE status = 'pendente' AND tentativas > 0").get().n;
     assert.ok(pend > 0, 'mensagens devem ficar pendentes para nova tentativa');
     assert.equal(app.db.prepare('SELECT status FROM consultas WHERE id = ?').get(r.dados.consulta.id).status, 'confirmada');
+    // Quantas mensagens há na fila depende da data (lembretes só nas 24 h anteriores à consulta):
+    // novas tentativas (espera de 1 ms nos testes) até somar 5 falhas seguidas.
+    for (let i = 0; i < 5 && app.worker.circuito.estado !== 'aberto'; i++) {
+      await new Promise((ok) => setTimeout(ok, 5));
+      await app.worker.ciclo();
+    }
     assert.equal(app.worker.circuito.estado, 'aberto', 'após 5 falhas seguidas o circuito abre');
     const chamadasAntes = app.provedor.chamadas;
     await app.worker.ciclo();
