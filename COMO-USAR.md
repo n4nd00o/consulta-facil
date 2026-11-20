@@ -273,9 +273,41 @@ consulta-facil/
 
 ---
 
-## 12. Ligar o SMS de verdade (Twilio)
+## 12. Ligar o SMS de verdade
 
-O código de envio real já está pronto e testado (`src/modules/sms-provider.js`). Só faltam as suas credenciais.
+O código de envio real já está pronto e testado (`src/modules/sms-provider.js`). Há duas opções:
+
+| Opção | Custo | Como funciona |
+|---|---|---|
+| **SMS Gateway for Android** (recomendada) | **Gratuita** (código aberto) | Um celular Android com o app envia os SMS pelo próprio chip, usando o plano que você já tem |
+| Twilio | Pago depois do crédito de teste | Serviço na nuvem; na conta de teste só envia para números verificados |
+
+### Opção gratuita: SMS Gateway for Android
+1. No celular Android que vai **enviar** os SMS (pode ser o seu), instale o app **SMS Gateway for Android**:
+   na Play Store ou pelo GitHub (https://github.com/capcom6/android-sms-gateway/releases).
+2. Abra o app, dê a permissão de enviar SMS, ative **Cloud server** e toque em **Online**.
+   O app mostra um **usuário** e uma **senha**.
+3. Coloque no `.env` (local/Docker):
+   ```
+   SMS_PROVEDOR=smsgate
+   SMSGATE_USUARIO=o-usuario-do-app
+   SMSGATE_SENHA=a-senha-do-app
+   ```
+   Na Vercel:
+   ```powershell
+   npx vercel env add SMS_PROVEDOR production       # digite: smsgate
+   npx vercel env add SMSGATE_USUARIO production
+   npx vercel env add SMSGATE_SENHA production --sensitive
+   npx vercel deploy --prod
+   ```
+4. Deixe o celular ligado, com internet e o app aberto em segundo plano. Os SMS saem do chip dele
+   (veja se o seu plano tem SMS ilimitado, como a maioria dos planos de celular).
+5. Confira no painel da equipe: aparece `Provedor: SMS Gateway (celular Android) — SMS real e gratuito`.
+
+> Sem internet no celular? No app, use **Local server** e coloque `SMSGATE_URL=http://IP-DO-CELULAR:8080`
+> (funciona só com o computador e o celular na mesma rede Wi-Fi; não funciona na Vercel).
+
+### Opção paga: Twilio
 O Twilio dá um crédito de teste ao criar a conta; na conta de teste, ele só envia para **números verificados**.
 
 ### O que você precisa fazer (uma vez)

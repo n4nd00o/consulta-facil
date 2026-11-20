@@ -2,7 +2,8 @@
 // sistema (outbox, retentativas, circuit breaker) não sabe qual está em uso.
 //
 //   SMS_PROVEDOR=simulado (padrão) → nada sai do servidor; as mensagens aparecem no painel.
-//   SMS_PROVEDOR=twilio            → envio real pelo Twilio (SMS ou WhatsApp), via API HTTP.
+//   SMS_PROVEDOR=smsgate           → SMS real e GRATUITO pelo seu celular Android (app SMS Gateway).
+//   SMS_PROVEDOR=twilio            → SMS/WhatsApp real pelo Twilio (pago depois do crédito de teste).
 //
 // Em qualquer provedor, o painel da demonstração pode simular "fora do ar" e "lento"
 // para reproduzir as falhas do piloto sem desligar o provedor de verdade.
@@ -60,7 +61,40 @@ export class SmsProviderSimulado extends ProvedorBase {
   }
 }
 
-/** Twilio (https://www.twilio.com/docs/messaging/api/message-resource). Sem SDK: um POST HTTP. */
+/**
+ * SMS Gateway for Android (https://sms-gate.app, código aberto e gratuito): um celular Android com o app
+ * instalado vira o "provedor" e envia os SMS pelo próprio chip. Modo nuvem (padrão) funciona até na Vercel;
+ * no modo local, SMSGATE_URL aponta para o celular na rede (ex.: http://192.168.0.10:8080).
+ */
+export class SmsProviderSmsGate extends ProvedorBase {
+  constructor({ usuario, senha, url = 'https://api.sms-gate.app/3rdparty/v1', timeoutMs = 5000 }) {
+    super('smsgate');
+    this.autorizacao = `Basic ${Buffer.from(`${usuario}:${senha}`).toString('base64')}`;
+    this.url = `${url.replace(/\/+$/, '')}/message`;
+    this.timeoutMs = timeoutMs;
+  }
+
+  async entregar(telefone, texto) {
+    const corpo = JSON.stringify({ message: texto, phoneNumbers: [telefoneInternacional(telefone)] });
+    let r;
+    try {
+      r = await fetch(this.url, {
+        method: 'POST',
+        headers: { Authorization: this.autorizacao, 'Content-Type': 'application/json' },
+        body: corpo,
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+    } catch (e) {
+      throw new ErroEnvio(`Sem resposta do SMS Gateway (${e.name === 'TimeoutError' ? 'timeout' : 'rede'})`);
+    }
+    const dados = await r.json().catch(() => ({}));
+    if (r.ok) return { id: dados.id };
+    const permanente = r.status >= 400 && r.status < 500 && r.status !== 429;
+    throw new ErroEnvio(`SMS Gateway ${r.status}: ${dados.message ?? dados.error ?? 'erro'}`, { permanente });
+  }
+}
+
+/** Twilio (https://www.twilio.com/docs/messaging/api/message-resource). Sem SDK: um POST HTTP. Pago após o crédito de teste. */
 export class SmsProviderTwilio extends ProvedorBase {
   constructor({ accountSid, authToken, remetente, messagingServiceSid, canal = 'sms', timeoutMs = 5000, baseUrl = 'https://api.twilio.com' }) {
     super(canal === 'whatsapp' ? 'twilio-whatsapp' : 'twilio-sms');
@@ -104,6 +138,16 @@ export class SmsProviderTwilio extends ProvedorBase {
  */
 export function criarProvedor(env = process.env, { timeoutMs } = {}) {
   const escolhido = (env.SMS_PROVEDOR || 'simulado').toLowerCase();
+  if (escolhido === 'smsgate') {
+    const faltam = ['SMSGATE_USUARIO', 'SMSGATE_SENHA'].filter((k) => !env[k]);
+    if (faltam.length) {
+      return { provedor: new SmsProviderSimulado(), aviso: `SMS_PROVEDOR=smsgate, mas faltam: ${faltam.join(', ')}. Usando o modo simulado.` };
+    }
+    return {
+      provedor: new SmsProviderSmsGate({ usuario: env.SMSGATE_USUARIO, senha: env.SMSGATE_SENHA, url: env.SMSGATE_URL || undefined, timeoutMs }),
+      aviso: null,
+    };
+  }
   if (escolhido !== 'twilio') return { provedor: new SmsProviderSimulado(), aviso: null };
 
   const canal = (env.SMS_CANAL || 'sms').toLowerCase() === 'whatsapp' ? 'whatsapp' : 'sms';

@@ -135,6 +135,7 @@ html.contraste .barra-status, html.contraste .app-topo { background: #000; color
 /* Avisos: caixa com borda completa e cantos arredondados */
 .app-conteudo .aviso { border: 2px solid; border-radius: 12px; font-weight: 400; }
 .app-conteudo .aviso.info { border-color: var(--marca); background: var(--marca-clara); }
+.app-conteudo .aviso.erro { border-color: var(--perigo); background: var(--perigo-fundo); }
 /* Horário sem vaga: só esmaecido */
 .escolha-btn:disabled { opacity: .5; border-style: solid; background: var(--superficie); }
 .escolha-btn:disabled .nome { text-decoration: none; color: var(--texto); }

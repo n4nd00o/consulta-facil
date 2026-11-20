@@ -10,6 +10,44 @@ Sem dependências externas: **Node.js 22.5+** (usa o SQLite embutido `node:sqlit
 
 > **Passo a passo de instalação, uso e roteiro de demonstração: [COMO-USAR.md](COMO-USAR.md)**
 
+## Veja funcionando
+
+| Agendamento completo (5 passos, sem e-mail) | A última vaga: duas pessoas, uma vaga |
+|---|---|
+| ![Agendamento completo](docs/gif/agendamento.gif) | ![Esta vaga acabou](docs/gif/ultima-vaga.gif) |
+| **SMS fora do ar e clique duplo em "Cancelar"** | **Cadastro de quem ainda não tem (LGPD)** |
+| ![SMS fora do ar e clique duplo](docs/gif/sms-fora-do-ar-e-clique-duplo.gif) | ![Cadastro](docs/gif/cadastro.gif) |
+
+À direita do celular fica o **Painel da demonstração**: ele não faz parte do app, só provoca as falhas do piloto
+(vaga disputada, SMS fora do ar, clique duplo) e mostra a fila de mensagens (outbox) ao vivo.
+
+### Telas
+
+| | | |
+|---|---|---|
+| ![Entrar](docs/img/01-entrar.png)<br>**1. Entrar** — CPF e data de nascimento | ![Código SMS](docs/img/02-codigo-sms.png)<br>**2. Código por SMS** | ![Início](docs/img/03-inicio.png)<br>**Início** |
+| ![Especialidades](docs/img/04-especialidades.png)<br>**3. Qual consulta** — vagas na semana | ![Unidade](docs/img/05-unidade.png)<br>**4. Unidade** | ![Dia e horário](docs/img/06-dia-e-horario.png)<br>**4. Dia e horário** — "2 vagas", "sem vaga" |
+| ![Confirmar](docs/img/07-confirmar.png)<br>**5. Confira e confirme** | ![Consulta marcada](docs/img/08-consulta-marcada.png)<br>**Consulta marcada** | ![Minhas consultas](docs/img/09-minhas-consultas.png)<br>**Minhas consultas** — lembrete e "Vou comparecer" |
+| ![Esta vaga acabou](docs/img/10-esta-vaga-acabou.png)<br>**Vaga disputada** — nunca duas reservas | ![Confirmar cancelamento](docs/img/11-confirmar-cancelamento.png)<br>**Cancelar** pede confirmação | ![SMS fora do ar](docs/img/12-sms-fora-do-ar.png)<br>**SMS fora do ar** — retentativa com limite |
+| ![Segundo clique](docs/img/13-segundo-clique.png)<br>**Clique duplo** — "já foi cancelada" | ![Cadastro LGPD](docs/img/14-cadastro-autorizacao-lgpd.png)<br>**Cadastro** — autorização LGPD obrigatória | ![No celular](docs/img/16-celular-entrar.png)<br>**No celular** — tela cheia |
+
+![Painel da equipe da UBS](docs/img/15-painel-da-equipe.png)
+**Painel da equipe da UBS** — métricas do agendamento, liberação por UBS, SMS que não chegaram, agenda da recepção e migração.
+
+## Tudo gratuito
+
+| Para quê | Ferramenta | Custo |
+|---|---|---|
+| Servidor e banco | Node.js + SQLite embutido (`node:sqlite`), sem bibliotecas | Gratuito |
+| Código | GitHub (repositório público) | Gratuito |
+| Publicação | Vercel, plano Hobby | Gratuito |
+| Rodar com banco permanente | Docker Desktop (uso pessoal/educacional) | Gratuito |
+| SMS de verdade | SMS Gateway for Android (código aberto) + chip do seu celular | Gratuito* |
+| Prints e GIFs | Playwright + Microsoft Edge + gifenc | Gratuito |
+
+\* Os SMS saem do plano do celular; a maioria dos planos inclui SMS ilimitado. O suporte ao Twilio continua no
+código como opção, mas ele é pago depois do crédito de teste, então **não é necessário**.
+
 ```bash
 npm start      # http://localhost:3000  (cidadão)  e  http://localhost:3000/painel  (equipe, senha demo: ubs123)
 npm test       # 16 testes de aceitação
@@ -75,8 +113,9 @@ O mesmo código roda localmente (`npm start`) e na Vercel:
 
 ## SMS real e Docker
 
-- **SMS/WhatsApp de verdade:** `SMS_PROVEDOR=twilio` + credenciais do Twilio (veja `.env.example` e a
-  seção 12 do COMO-USAR). Sem credenciais, o app usa o provedor simulado. Número inválido ou não verificado
+- **SMS de verdade, de graça:** `SMS_PROVEDOR=smsgate` + usuário/senha do app **SMS Gateway for Android**
+  (código aberto): um celular Android envia os SMS pelo próprio chip. Também há suporte ao Twilio (pago após o
+  crédito de teste). Veja `.env.example` e a seção 12 do COMO-USAR. Sem credenciais, o app usa o provedor simulado. Número inválido ou não verificado
   (erro 4xx) é **falha permanente**: vai direto para a lista "ligar para o paciente" e não abre o circuit
   breaker. Provedor fora do ar (5xx/timeout) é **falha temporária**: retenta com espera crescente.
 - **Docker:** `docker compose up -d --build`; o banco fica num volume e é **permanente** (seção 13 do COMO-USAR).

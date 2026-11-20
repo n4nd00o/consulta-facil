@@ -14,7 +14,7 @@ before(async () => {
     let dados = '';
     req.on('data', (c) => { dados += c; });
     req.on('end', () => {
-      pedidos.push({ url: req.url, auth: req.headers.authorization, corpo: new URLSearchParams(dados) });
+      pedidos.push({ url: req.url, auth: req.headers.authorization, corpo: new URLSearchParams(dados), bruto: dados });
       res.writeHead(resposta.status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(resposta.corpo));
     });
@@ -62,6 +62,22 @@ describe('Provedor de SMS', () => {
     assert.equal(pedidos[0].corpo.get('To'), '+5511988881001');
     assert.equal(pedidos[0].corpo.get('From'), '+15005550006');
     assert.equal(pedidos[0].corpo.get('Body'), 'Olá');
+  });
+
+  test('SMS Gateway (gratuito, celular Android) envia JSON com autenticação básica', async () => {
+    pedidos = [];
+    resposta = { status: 202, corpo: { id: 'msg-1', state: 'Pending' } };
+    const faltando = criarProvedor({ SMS_PROVEDOR: 'smsgate', SMSGATE_USUARIO: 'u' });
+    assert.equal(faltando.provedor.nome, 'simulado');
+    assert.match(faltando.aviso, /SMSGATE_SENHA/);
+
+    const { provedor } = criarProvedor({ SMS_PROVEDOR: 'smsgate', SMSGATE_USUARIO: 'usuario', SMSGATE_SENHA: 'senha', SMSGATE_URL: `${base}/3rdparty/v1/` });
+    assert.equal(provedor.nome, 'smsgate');
+    const r = await provedor.enviar('(11) 98888-1001', 'Seu código é 123456');
+    assert.equal(r.id, 'msg-1');
+    assert.equal(pedidos[0].url, '/3rdparty/v1/message');
+    assert.equal(pedidos[0].auth, `Basic ${Buffer.from('usuario:senha').toString('base64')}`);
+    assert.deepEqual(JSON.parse(pedidos[0].bruto), { message: 'Seu código é 123456', phoneNumbers: ['+5511988881001'] });
   });
 
   test('WhatsApp usa o prefixo whatsapp: no remetente e no destino', async () => {
