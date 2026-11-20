@@ -56,7 +56,7 @@ export class SigaSaudeAdapter {
 }
 
 // O legado grava sem acento; o Adapter traduz para o nome que o cidadão reconhece.
-const ESPECIALIDADES = { 'CLINICO GERAL': 'Clínico Geral', PEDIATRIA: 'Pediatria', GINECOLOGIA: 'Ginecologia', CARDIOLOGIA: 'Cardiologia' };
+const ESPECIALIDADES = { 'CLINICO GERAL': 'Clínico geral', PEDIATRIA: 'Pediatria', GINECOLOGIA: 'Ginecologia', CARDIOLOGIA: 'Cardiologia' };
 
 const somenteDigitos = (s) => String(s ?? '').replace(/\D/g, '');
 const titulo = (s) =>
@@ -111,6 +111,7 @@ export const PACIENTES_DEMO = [
 const NOMES_MEDICOS = ['ANA LUCIA MOTA', 'CARLOS EDUARDO RAMOS', 'BEATRIZ SANTOS', 'PAULO HENRIQUE DIAS',
   'FERNANDA ALVES', 'RICARDO GOMES', 'LUCIANA PRADO', 'MARCOS VIEIRA', 'TERESA CAMPOS',
   'ROBERTO FARIAS', 'SIMONE ARAUJO', 'EDUARDO MELO', 'PATRICIA LOPES', 'GUSTAVO REIS', 'HELENA COSTA'];
+const SEGUNDOS_CLINICOS = ['MARINA TAVARES', 'JORGE NASCIMENTO', 'CLARA BITTENCOURT', 'OTAVIO SANTANA', 'DENISE QUEIROZ'];
 
 function proximosDiasUteis(hoje, qtd) {
   const dias = [];
@@ -133,7 +134,7 @@ function horariosDo(especialidade, idxDia) {
 export function criarLegadoSimulado(hoje = new Date()) {
   const TB_UNIDADE = [
     { CD_UBS: 1, DS_UBS: 'UBS Centro', DS_BAIRRO: 'Centro' },
-    { CD_UBS: 2, DS_UBS: 'UBS Jardim das Flores', DS_BAIRRO: 'Jardim das Flores' },
+    { CD_UBS: 2, DS_UBS: 'UBS Jardim Esperança', DS_BAIRRO: 'Jardim Esperança' },
     { CD_UBS: 3, DS_UBS: 'UBS Vila Nova', DS_BAIRRO: 'Vila Nova' },
     { CD_UBS: 4, DS_UBS: 'UBS Parque Industrial', DS_BAIRRO: 'Parque Industrial' },
     { CD_UBS: 5, DS_UBS: 'UBS São José', DS_BAIRRO: 'São José' },
@@ -148,13 +149,19 @@ export function criarLegadoSimulado(hoje = new Date()) {
   }
   // Cardiologia só na UBS Centro e com a agenda toda ocupada: cenário "sem vagas -> fila de espera"
   TB_MEDICO.push({ CD_MED: 'M016', NM_MED: 'RAFAEL MONTEIRO', DS_ESPEC: 'CARDIOLOGIA', CD_UBS: 1 });
+  // Um segundo clínico por UBS, nos mesmos horários: um horário pode ter "2 vagas"
+  TB_UNIDADE.forEach((u, i) => {
+    TB_MEDICO.push({ CD_MED: `M${String(17 + i).padStart(3, '0')}`, NM_MED: SEGUNDOS_CLINICOS[i], DS_ESPEC: 'CLINICO GERAL', CD_UBS: u.CD_UBS, segundo: true });
+  });
 
   const TB_AGENDA = [];
   const dias = proximosDiasUteis(hojeEmBrasilia(hoje), 5);
   for (const med of TB_MEDICO) {
     dias.forEach((dia, idxDia) => {
       horariosDo(med.DS_ESPEC, idxDia).forEach((h, j) => {
-        const ocupado = med.DS_ESPEC === 'CARDIOLOGIA' || (med.DS_ESPEC === 'PEDIATRIA' ? (idxDia > 0 || j === 0) : (j + idxDia) % 3 === 0);
+        const ocupado = med.DS_ESPEC === 'CARDIOLOGIA'
+          || (med.DS_ESPEC === 'PEDIATRIA' ? (idxDia > 0 || j === 0)
+            : med.segundo ? (j + idxDia) % 3 !== 1 : (j + idxDia) % 3 === 0);
         // Código estável (profissional + data + hora): a sincronização diária não duplica horários
         TB_AGENDA.push({ CD_AGENDA: `${med.CD_MED}-${fmtData(dia).split('/').reverse().join('')}-${h.replace(':', '')}`, CD_MED: med.CD_MED, DT_AGENDA: fmtData(dia), HR_AGENDA: h, FL_LIVRE: ocupado ? 'N' : 'S' });
       });

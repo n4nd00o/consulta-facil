@@ -48,12 +48,12 @@ Para produção: `DEMO=0 PAINEL_SENHA=... BACKOFF_UNIT_MS=60000 npm start`.
 | 3 | Controle e liberdade | Botão ‹ (voltar) no mesmo lugar em toda tela; abas Início/Agendar/Consultas sempre disponíveis; "Escolher outro horário"; reenviar código; Esc fecha diálogos sem executar |
 | 4 | Consistência e padrões | Mesmo cabeçalho (voltar, título, A−, A+, contraste) e mesmas abas em todas as telas; mesmos estilos de botão (principal, secundário, perigo); padrão de app de celular |
 | 5 | Prevenção de erros | CPF validado antes do envio; data conferida; "Confira e confirme" antes de agendar; horários ocupados não podem ser escolhidos; diálogo de confirmação para cancelar, sair da fila, desligar UBS e migrar; clique duplo não cria duas consultas |
-| 6 | Reconhecer em vez de lembrar | Unidade, dia e horário na mesma tela, incluindo os horários "sem vaga"; próximo horário de cada UBS; cartão "Sua próxima consulta" no Início; o que a remarcação substitui |
+| 6 | Reconhecer em vez de lembrar | Unidade, dia e horário na mesma tela, incluindo os horários "sem vaga"; cartão "Sua próxima consulta" no Início; o que a remarcação substitui |
 | 7 | Flexibilidade e eficiência | Atalho "Ver, remarcar ou cancelar" no Início; dia com vaga já selecionado; UBS ordenadas pelo horário mais cedo; tecla Enter envia formulários; avanço automático dia → mês → ano |
 | 8 | Estética e design minimalista | Uma decisão por tela; ajuda recolhida; dados de demonstração fora do app (painel ao lado) |
 | 9 | Ajudar a reconhecer e corrigir erros | Erro junto do campo, dizendo o que fazer ("Faltam números no CPF: você digitou 9 de 11"); "Esta vaga acabou" com horários próximos e fila de espera |
 | 9b | (cadastro) | Cadastro de quem não está no SIGA-Saúde: erro "não encontramos cadastro" leva a "Criar meu cadastro"; CPF já cadastrado volta para "Entrar" com os dados preenchidos; cada campo explica o que corrigir |
-| 10 | Ajuda e documentação | Seção "Precisa de ajuda?" no rodapé (SMS, sem celular, sem horário, cancelar, Disque Saúde 136); orientações para o dia da consulta |
+| 10 | Ajuda e documentação | "Ajuda" no rodapé do Início e da entrada abre as dúvidas comuns (SMS, primeira vez, sem horário, cancelar, Disque Saúde 136); orientações para o dia da consulta |
 
 Acessibilidade (RA01/WCAG 2.1 AA): texto ajustável, alto contraste, contraste ≥ 4,5:1, foco visível, alvos de toque ≥ 44 px,
 rótulos e mensagens ligados aos campos (`aria-describedby`, `aria-invalid`), avisos em `aria-live`, etapa atual com `aria-current`.

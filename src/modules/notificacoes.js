@@ -102,7 +102,7 @@ export class WorkerNotificacoes {
     for (const c of pendentes) {
       if (Number(marcar.run(c.id).changes) === 0) continue;
       enfileirar(this.db, {
-        tipo: 'lembrete', pacienteId: c.paciente_id, telefone: c.telefone, resumo: `Lembrete: ${c.especialidade}, ${fmt(c.inicio)}`,
+        tipo: 'lembrete', pacienteId: c.paciente_id, telefone: c.telefone, resumo: `Lembrete: ${c.especialidade}, ${fmtCurto(c.inicio)}`,
         mensagem: `Consulta Fácil: lembrete da sua consulta de ${c.especialidade} em ${fmt(c.inicio)} na ${c.ubs}. Responda pelo app para confirmar presença.`,
       });
     }
@@ -152,6 +152,16 @@ export class WorkerNotificacoes {
       return { enviado: false, motivo: e.message };
     }
   }
+}
+
+/** Resumo curto para a fila de mensagens: "Sex 20/11 10:30" (horário de Brasília). */
+export function fmtCurto(iso) {
+  const d = new Date(iso);
+  const fuso = { timeZone: 'America/Sao_Paulo' };
+  const sem = d.toLocaleDateString('pt-BR', { ...fuso, weekday: 'short' }).replace('.', '');
+  const dia = d.toLocaleDateString('pt-BR', { ...fuso, day: '2-digit', month: '2-digit' });
+  const hora = d.toLocaleTimeString('pt-BR', { ...fuso, hour: '2-digit', minute: '2-digit' });
+  return `${sem.charAt(0).toUpperCase()}${sem.slice(1)} ${dia} ${hora}`;
 }
 
 // Texto dos SMS sempre no horário de Brasília, mesmo com o servidor em UTC (Vercel).

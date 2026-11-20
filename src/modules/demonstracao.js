@@ -19,8 +19,7 @@ function situacao(m, maxTentativas) {
   if (m.status === 'contatado') return 'não chegou; a UBS já ligou para o paciente';
   if (m.status === 'falhou') return `falhou ${m.tentativas} vezes; foi para a lista da UBS ligar`;
   if (m.tentativas === 0) return 'na fila para envio';
-  const espera = Math.max(0, Math.round((new Date(m.proxima_tentativa) - Date.now()) / 1000));
-  return `falhou, na fila (tentativa ${m.tentativas} de ${maxTentativas}, espera crescente: nova tentativa em ${espera} s)`;
+  return `falhou, na fila (tentativa ${m.tentativas} de ${maxTentativas}, espera crescente)`;
 }
 
 /** Últimas mensagens do paciente da sessão (outbox), em linguagem simples. */

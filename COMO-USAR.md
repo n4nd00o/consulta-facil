@@ -66,7 +66,7 @@ Todos os dados são fictícios. No **Painel da demonstração** (ao lado do celu
 | Ana Clara Rocha | 111.222.333-96 | 20/11/1992 |
 | Jose Carlos Nunes (idoso) | 444.555.666-19 | 07/07/1955 |
 
-No modo demonstração, o **código do SMS aparece no Painel da demonstração** ("Código de teste do SMS"),
+No modo demonstração, o **código do SMS aparece no Painel da demonstração** ("Senha de teste do SMS"),
 pois não há um provedor de SMS real conectado. No celular de verdade, ele aparece também na própria tela.
 
 ---
@@ -77,7 +77,8 @@ pois não há um provedor de SMS real conectado. No celular de verdade, ele apar
 - **No computador**, o app aparece dentro de uma moldura de celular e o **Painel da demonstração** fica ao lado.
   **No celular**, o app ocupa a tela inteira e o painel fica embaixo.
 - **Cabeçalho** (igual em todas as telas): botão **‹** para voltar, nome da tela e os botões **A−**, **A+**
-  (tamanho do texto) e **◐** (alto contraste). As escolhas ficam lembradas no navegador.
+  (tamanho do texto), como nos modelos. **Alto contraste**, **Ajuda** e **Sair** ficam no rodapé do Início
+  (e da tela de entrada). As escolhas ficam lembradas no navegador.
 - **Abas embaixo**: **Início**, **Agendar** e **Consultas**, com a aba atual destacada.
 
 ### Agendar em 5 passos (até 5 telas, como pede o RA01)
@@ -86,8 +87,8 @@ pois não há um provedor de SMS real conectado. No celular de verdade, ele apar
 2. **Passo 2 de 5** — código de 6 números → **Entrar**. **Reenviar código** fica disponível após 30 segundos.
 3. **Passo 3 de 5** — "Qual consulta você precisa?": cada especialidade mostra **quantas vagas tem nesta semana**.
    Cardiologia aparece como **"Sem vagas: você pode entrar na fila"**.
-4. **Passo 4 de 5** — numa tela só: **Unidade** (com o próximo horário de cada uma), **Dia** (botões como
-   "Sex 20/11", com o número de vagas) e **Horário**. Horários ocupados aparecem **riscados, com "sem vaga"**,
+4. **Passo 4 de 5** — numa tela só: **Unidade**, **Dia** (botões como "Sex 20/11") e **Horário**
+   (ex.: "09:00 — 2 vagas", somando os profissionais daquele horário). Horários ocupados aparecem **apagados, com "sem vaga"**,
    e não podem ser escolhidos. Se a unidade não tiver nenhum horário livre, aparece **Entrar na fila de espera**.
 5. **Passo 5 de 5** — **Confira e confirme**: resumo da consulta → **Confirmar consulta**.
 
@@ -107,7 +108,7 @@ aparece embaixo de "Primeira vez aqui?", e o aviso de "não encontramos cadastro
 ### Início
 "Olá, Maria! O que você precisa hoje?", o cartão **Sua próxima consulta** e os botões **Agendar consulta** e
 **Ver, remarcar ou cancelar**. Se abrir uma vaga da fila de espera, aparece um cartão **"Abriu uma vaga"**.
-Embaixo ficam **Precisa de ajuda?** e o link **Sair**.
+No rodapé ficam **Alto contraste**, **Ajuda** (abre uma janela com as dúvidas comuns) e **Sair**.
 
 ### Consultas
 - Cada consulta mostra a especialidade, uma etiqueta (**Marcada**, **Presença confirmada**, **Cancelada**), a UBS e
@@ -144,7 +145,7 @@ Tudo é feito pelo **Painel da demonstração**, ao lado do celular. Ele **não 
 sob comando, os problemas que derrubaram o piloto, para mostrar como o sistema reage.
 
 ### 6.1 A última vaga (duas pessoas, uma vaga)
-1. Entre como **Maria** → **Agendar** → **Pediatria** → **UBS Centro** → escolha o horário livre.
+1. Entre como **Maria** → **Agendar** → **Clínico geral** → **UBS Vila Nova** → escolha um horário livre.
 2. No painel, marque **"Outra pessoa confirma a mesma vaga um instante antes de mim"**.
 3. Toque em **Confirmar consulta**.
    Resultado: a outra pessoa fica com a vaga e Maria vê **"Esta vaga acabou"**, volta para a escolha de horário
@@ -155,7 +156,7 @@ sob comando, os problemas que derrubaram o piloto, para mostrar como o sistema r
 1. No painel, marque **"Provedor de SMS fora do ar"**.
 2. Agende ou cancele uma consulta: a ação é **concluída normalmente**.
 3. Em **Fila de mensagens (outbox)** aparece, por exemplo:
-   *"Cancelamento: Clínico Geral, sex., 20/11, 07:30 → falhou, na fila (tentativa 3 de 5, espera crescente…)"*.
+   *"Cancelamento: Clínico geral, Sex 20/11 07:30 → falhou, na fila (tentativa 3 de 5, espera crescente)"*.
    Depois de 5 tentativas, a mensagem vai para a lista **SMS que não chegaram** do painel da equipe.
 4. Desmarque a caixa: as mensagens pendentes passam a ser entregues.
 
@@ -172,7 +173,7 @@ sob comando, os problemas que derrubaram o piloto, para mostrar como o sistema r
 
 ### 6.5 Idosa sem e-mail
 Entre como **Maria (1948)**: todo o fluxo usa apenas CPF, data de nascimento e código por SMS.
-Mostre também **A+** e **◐** (alto contraste) no cabeçalho.
+Mostre também **A+** no cabeçalho e **Alto contraste** no rodapé do Início.
 
 ### 6.6 Kill switch por UBS (painel da equipe)
 No painel, clique **Desligar** na UBS Centro e confirme: ela some imediatamente da lista do cidadão.

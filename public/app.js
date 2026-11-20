@@ -42,7 +42,6 @@ function mostrar(tela) {
   const titulo = estado.remarcando && ['horario', 'confirmar'].includes(tela) ? 'Remarcar' : meta.titulo;
   $('app-titulo').textContent = titulo;
   $('voltar').hidden = !meta.voltar;
-  $('app-logo').hidden = Boolean(meta.voltar);
   $('abas').hidden = !estado.logado;
   document.querySelectorAll('#abas [data-aba]').forEach((b) => {
     if (b.dataset.aba === meta.aba) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
@@ -112,6 +111,7 @@ const maiuscula = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const semana = (d) => maiuscula(d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''));
 const diaMes = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 const mesmoDia = (a, b) => a.toDateString() === b.toDateString();
+const fmtDiaLongo = (d) => d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 
 /** "Hoje 16/11 às 17:30", "Amanhã…", "Sex 20/11 às 10:30" — como as pessoas falam. [H2] */
 function fmtCartao(iso) {
@@ -176,7 +176,7 @@ function mostrarCodigoEnviado(r) {
   $('codigo-info').textContent = r.smsEnviado
     ? `Enviamos um SMS para ${r.telefone}. Pode levar até 1 minuto.`
     : `Não conseguimos enviar o SMS para ${r.telefone} agora. Peça um novo código em instantes ou procure sua UBS.`;
-  const textoDemo = r.codigoDemo ? `Código de teste do SMS: ${r.codigoDemo}` : '';
+  const textoDemo = r.codigoDemo ? `Senha de teste do SMS: ${r.codigoDemo}` : '';
   $('codigo-demo').hidden = !r.codigoDemo;
   $('codigo-demo').textContent = textoDemo;
   $('demo-codigo').textContent = textoDemo;
@@ -322,9 +322,27 @@ $('form-codigo').addEventListener('submit', (ev) => {
 
 function entrouComo(nome) {
   estado.logado = true;
-  $('saudacao').textContent = `Olá, ${nome.split(' ')[0]}! O que você precisa hoje?`;
   return irInicio();
 }
+
+/** [H10] Ajuda: as dúvidas mais comuns numa janela, sem ocupar a tela principal. */
+const AJUDA = [
+  ['Não recebi o SMS', 'Espere 1 minuto e peça um novo código. Se o celular estiver errado, procure a recepção da UBS.'],
+  ['Primeira vez aqui', 'Na tela de entrada, toque em "Criar meu cadastro". Não precisa de e-mail.'],
+  ['Não encontro horário', 'Entre na fila de espera: quando alguém cancelar, você recebe um SMS.'],
+  ['Não vou poder ir', 'Em "Consultas", toque em "Cancelar" para liberar a vaga para outra pessoa.'],
+  ['Outras dúvidas', 'Disque Saúde 136 ou a recepção da sua UBS.'],
+];
+function mostrarAjuda() {
+  const d = el('dialog', { class: 'dialogo', 'aria-labelledby': 'ajuda-titulo' },
+    el('h2', { id: 'ajuda-titulo' }, 'Precisa de ajuda?'),
+    el('dl', {}, ...AJUDA.flatMap(([t, r]) => [el('dt', {}, t), el('dd', {}, r)])),
+    el('div', { class: 'dialogo-acoes' }, el('button', { type: 'button', class: 'botao principal', onclick: () => d.close() }, 'Fechar')));
+  d.addEventListener('close', () => d.remove());
+  document.body.append(d);
+  d.showModal();
+}
+document.querySelectorAll('[data-ajuda]').forEach((b) => b.addEventListener('click', mostrarAjuda));
 
 $('sair').addEventListener('click', () => executar(null, async () => {
   await api('POST', '/api/auth/sair');
@@ -369,8 +387,7 @@ async function irEspecialidades() {
     onclick: () => abrirHorarios(e.especialidade, null),
   }, el('span', {},
     el('span', { class: 'nome' }, e.especialidade),
-    el('span', { class: 'det' }, e.vagas ? `${plural(e.vagas, 'vaga', 'vagas')} nesta semana` : 'Sem vagas: você pode entrar na fila')),
-  icone('seta'))));
+    el('span', { class: 'det' }, e.vagas ? `${plural(e.vagas, 'vaga', 'vagas')} nesta semana` : 'Sem vagas: você pode entrar na fila')))));
   mostrar('especialidade');
 }
 
@@ -392,9 +409,8 @@ async function irHorario() {
   $('opcoes-ubs').replaceChildren(...unidades.map((u) => el('button', {
     type: 'button', class: 'escolha-btn', 'aria-pressed': String(estado.ubs?.id === u.id),
     onclick: () => { estado.ubs = u; estado.dia = null; estado.mostrarFila = false; executar(null, irHorario); },
-  }, el('span', {},
-    el('span', { class: 'nome' }, u.nome),
-    el('span', { class: 'det' }, u.vagas ? `Próximo horário: ${fmtCurta(u.proxima)}` : 'Sem horários livres')))));
+    'aria-label': `${u.nome}, ${u.vagas ? `próximo horário ${fmtCurta(u.proxima)}` : 'sem horários livres'}`,
+  }, el('span', { class: 'nome' }, u.nome))));
 
   if (estado.ubs) {
     estado.horarios = await api('GET', `/api/horarios?especialidade=${encodeURIComponent(estado.especialidade)}&ubs=${estado.ubs.id}&todos=1`);
@@ -419,22 +435,25 @@ function renderDiasEHoras() {
     const n = livres(lista);
     return el('button', {
       type: 'button', class: 'chip', 'aria-pressed': String(chave === estado.dia),
+      'aria-label': `${fmtDiaLongo(d)}, ${n ? plural(n, 'vaga', 'vagas') : 'sem vaga'}`,
       onclick: () => { estado.dia = chave; renderDiasEHoras(); },
-    }, `${semana(d)} ${diaMes(d)}`, el('span', { class: 'qtd' }, n ? plural(n, 'vaga', 'vagas') : 'sem vaga'));
+    }, `${semana(d)} ${diaMes(d)}`);
   }));
 
+  // Horários agrupados: "09:00 — 2 vagas" junta os profissionais que atendem no mesmo horário
   const doDia = porDia.get(estado.dia) ?? [];
+  const porHora = Map.groupBy(doDia, (v) => fmtHora(v.inicio));
   $('bloco-horas').hidden = !temUbs || doDia.length === 0;
-  $('opcoes-hora').replaceChildren(...doDia.map((v) => {
-    const minha = v.id === estado.remarcando?.vaga_id;
-    const livre = v.disponiveis > 0 && !minha;
+  $('opcoes-hora').replaceChildren(...[...porHora.entries()].map(([hora, vagas]) => {
+    const minha = vagas.some((v) => v.id === estado.remarcando?.vaga_id);
+    const disponiveis = vagas.filter((v) => v.disponiveis > 0 && v.id !== estado.remarcando?.vaga_id);
+    const n = disponiveis.length;
+    const texto = n ? plural(n, 'vaga', 'vagas') : minha ? 'sua consulta atual' : 'sem vaga';
     return el('button', {
-      type: 'button', class: 'escolha-btn', disabled: !livre,
-      'aria-label': `${fmtHora(v.inicio)}, ${minha ? 'sua consulta atual' : livre ? `livre, com ${v.profissional}` : 'sem vaga'}`,
-      onclick: () => escolherVaga(v),
-    }, el('span', {},
-      el('span', { class: 'nome' }, fmtHora(v.inicio)),
-      el('span', { class: 'det' }, minha ? 'sua consulta atual' : livre ? `1 vaga · ${v.profissional}` : 'sem vaga')));
+      type: 'button', class: 'escolha-btn', disabled: n === 0,
+      'aria-label': `${hora}, ${texto}`,
+      onclick: () => escolherVaga(disponiveis[0]),
+    }, el('span', {}, el('span', { class: 'nome' }, hora), el('span', { class: 'det' }, texto)));
   }));
 
   // Sem nenhum horário livre na unidade (ou a vaga acabou): oferecer a fila de espera [H9]
@@ -540,7 +559,7 @@ function cartaoConsulta(c, ativa) {
       estado.dia = null;
       ir('horario');
     } }, 'Remarcar'),
-    el('button', { type: 'button', class: 'botao perigo', onclick: (e) => cancelarConsulta(c, e.currentTarget) }, 'Cancelar')));
+    el('button', { type: 'button', class: 'botao', onclick: (e) => cancelarConsulta(c, e.currentTarget) }, 'Cancelar')));
   return cartao;
 }
 
@@ -558,7 +577,7 @@ async function cancelarConsulta(c, botao) {
     const r = await api('POST', `/api/consultas/${c.id}/cancelar`);
     if (r.ok) estado.ultimoCancelamento = c.id;
     await irConsultas();
-    aviso(r.ok ? 'Consulta cancelada. A vaga voltou para a agenda e foi oferecida ao primeiro da fila de espera.' : r.mensagem, r.ok ? 'info' : 'erro');
+    aviso(r.ok ? 'Consulta cancelada. A vaga voltou ao estoque e foi oferecida ao primeiro da fila de espera.' : r.mensagem, r.ok ? 'info' : 'erro');
   });
 }
 

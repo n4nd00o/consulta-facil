@@ -4,7 +4,7 @@
 //  - índice único parcial: no máximo uma consulta 'confirmada' por vaga (última barreira)
 //  - chave de idempotência por clique: duplo clique/reenvio não gera duas reservas
 import { agora, transacao } from '../db.js';
-import { enfileirar, fmt } from './notificacoes.js';
+import { enfileirar, fmt, fmtCurto } from './notificacoes.js';
 import { ErroNegocio, auditar } from './pacientes.js';
 
 const SQL_VAGA = `
@@ -24,7 +24,9 @@ export function especialidadesComVagas(db) {
       SUM(CASE WHEN v.disponiveis > 0 AND v.status = 'ativa' AND v.inicio > ? AND v.inicio <= ? THEN 1 ELSE 0 END) AS vagas
     FROM profissionais pr JOIN ubs u ON u.id = pr.ubs_id AND u.ativa = 1
     LEFT JOIN vagas v ON v.profissional_id = pr.id
-    GROUP BY pr.especialidade ORDER BY (vagas = 0), pr.especialidade`).all(agora(), ate)
+    GROUP BY pr.especialidade
+    ORDER BY (vagas = 0), CASE pr.especialidade WHEN 'Clínico geral' THEN 1 WHEN 'Pediatria' THEN 2 WHEN 'Ginecologia' THEN 3 ELSE 4 END,
+      pr.especialidade`).all(agora(), ate)
     .map((r) => ({ especialidade: r.especialidade, vagas: Number(r.vagas) }));
 }
 
@@ -74,7 +76,7 @@ function ofertarParaFila(db, vagaId) {
   if (!primeiro) return;
   db.prepare("UPDATE fila_espera SET status = 'avisado' WHERE id = ?").run(primeiro.id);
   enfileirar(db, {
-    tipo: 'vaga_fila', pacienteId: primeiro.paciente_id, telefone: primeiro.telefone, resumo: `Vaga da fila: ${vaga.especialidade}, ${fmt(vaga.inicio)}`,
+    tipo: 'vaga_fila', pacienteId: primeiro.paciente_id, telefone: primeiro.telefone, resumo: `Vaga da fila: ${vaga.especialidade}, ${fmtCurto(vaga.inicio)}`,
     mensagem: `Consulta Fácil: abriu uma vaga de ${vaga.especialidade} em ${fmt(vaga.inicio)} na ${vaga.ubs}. Entre no app para agendar.`,
   });
 }
@@ -119,7 +121,7 @@ export function agendar(db, pacienteId, vagaId, chave) {
                               VALUES (?, ?, 'confirmada', ?, ?)`).run(vaga.id, pacienteId, chave ?? null, agora());
       const paciente = obterPaciente(db, pacienteId);
       enfileirar(db, { // outbox: mesma transação do agendamento
-        tipo: 'confirmacao', pacienteId, telefone: paciente.telefone, resumo: `Confirmação: ${vaga.especialidade}, ${fmt(vaga.inicio)}`,
+        tipo: 'confirmacao', pacienteId, telefone: paciente.telefone, resumo: `Confirmação: ${vaga.especialidade}, ${fmtCurto(vaga.inicio)}`,
         mensagem: `Consulta Fácil: consulta de ${vaga.especialidade} confirmada para ${fmt(vaga.inicio)} na ${vaga.ubs} com ${vaga.profissional}.`,
       });
       db.prepare("UPDATE fila_espera SET status = 'saiu' WHERE paciente_id = ? AND especialidade = ? AND status IN ('aguardando','avisado')")
@@ -162,7 +164,7 @@ export function cancelar(db, cfg, pacienteId, consultaId) {
     if (tardio) verificarCancelamentosTardios(db, cfg, pacienteId, c.vaga_id);
     const v = db.prepare(`${SQL_VAGA} WHERE v.id = ?`).get(c.vaga_id);
     const paciente = obterPaciente(db, pacienteId);
-    enfileirar(db, { tipo: 'cancelamento', pacienteId, telefone: paciente.telefone, resumo: `Cancelamento: ${v.especialidade}, ${fmt(v.inicio)}`,
+    enfileirar(db, { tipo: 'cancelamento', pacienteId, telefone: paciente.telefone, resumo: `Cancelamento: ${v.especialidade}, ${fmtCurto(v.inicio)}`,
       mensagem: `Consulta Fácil: sua consulta de ${v.especialidade} em ${fmt(v.inicio)} na ${v.ubs} foi cancelada.` });
     return true;
   });
@@ -201,7 +203,7 @@ export function remarcar(db, pacienteId, consultaId, novaVagaId, chave) {
     const ins = db.prepare(`INSERT INTO consultas (vaga_id, paciente_id, status, chave_idempotencia, criada_em) VALUES (?, ?, 'confirmada', ?, ?)`)
       .run(nova.id, pacienteId, chave ?? null, agora());
     const paciente = obterPaciente(db, pacienteId);
-    enfileirar(db, { tipo: 'confirmacao', pacienteId, telefone: paciente.telefone, resumo: `Remarcação: ${nova.especialidade}, ${fmt(nova.inicio)}`,
+    enfileirar(db, { tipo: 'confirmacao', pacienteId, telefone: paciente.telefone, resumo: `Remarcação: ${nova.especialidade}, ${fmtCurto(nova.inicio)}`,
       mensagem: `Consulta Fácil: consulta remarcada para ${fmt(nova.inicio)} na ${nova.ubs} com ${nova.profissional}.` });
     return Number(ins.lastInsertRowid);
   });

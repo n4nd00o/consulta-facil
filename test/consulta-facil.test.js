@@ -29,7 +29,7 @@ function novoPaciente() {
   return criarSessao(app.db, app.cfg, { pacienteId: Number(r.lastInsertRowid), perfil: 'cidadao' });
 }
 
-function vagaLivre(especialidade = 'Clínico Geral') {
+function vagaLivre(especialidade = 'Clínico geral') {
   return app.db.prepare(`SELECT v.id FROM vagas v JOIN profissionais p ON p.id = v.profissional_id JOIN ubs u ON u.id = p.ubs_id
                          WHERE p.especialidade = ? AND u.ativa = 1 AND v.disponiveis > 0 AND v.inicio > ? ORDER BY v.id`).all(especialidade, new Date().toISOString());
 }

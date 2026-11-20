@@ -21,15 +21,21 @@ export function migrarDoLegado(db, adapter, { dryRun = false, ubsPiloto = [] } =
   };
 
   const executar = () => {
+    // Cadastros (UBS e profissionais): o SIGA-Saúde é a fonte da verdade — novos entram, nomes alterados
+    // são atualizados. A situação da UBS no app (ativa/desligada) é decisão da Secretaria e não muda aqui.
     const insUbs = db.prepare('INSERT OR IGNORE INTO ubs (id, nome, bairro, ativa) VALUES (?, ?, ?, ?)');
+    const atuUbs = db.prepare('UPDATE ubs SET nome = ?, bairro = ? WHERE id = ? AND (nome <> ? OR bairro <> ?)');
     for (const u of unidades) {
       const ativa = ubsPiloto.includes(Number(u.codigo)) ? 1 : 0;
       rel.inseridos.unidades += Number(insUbs.run(Number(u.codigo), u.nome, u.bairro, ativa).changes);
+      atuUbs.run(u.nome, u.bairro, Number(u.codigo), u.nome, u.bairro);
     }
 
     const insProf = db.prepare('INSERT OR IGNORE INTO profissionais (nome, especialidade, ubs_id, codigo_legado) VALUES (?, ?, ?, ?)');
+    const atuProf = db.prepare('UPDATE profissionais SET nome = ?, especialidade = ? WHERE codigo_legado = ? AND (nome <> ? OR especialidade <> ?)');
     for (const p of profissionais) {
       rel.inseridos.profissionais += Number(insProf.run(p.nome, p.especialidade, Number(p.codigoUbs), p.codigo).changes);
+      atuProf.run(p.nome, p.especialidade, p.codigo, p.nome, p.especialidade);
     }
 
     const idProf = db.prepare('SELECT id FROM profissionais WHERE codigo_legado = ?');

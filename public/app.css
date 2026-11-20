@@ -40,7 +40,7 @@ html.contraste .barra-status, html.contraste .app-topo { background: #000; color
 .icone-btn[aria-pressed="true"] { background: #fff; color: #000; }
 #voltar { font-size: 1.5rem; line-height: 1; }
 
-.app-conteudo { flex: 1; overflow-y: auto; padding: 1.1rem 1rem 1.5rem; }
+.app-conteudo { flex: 1; overflow-y: auto; padding: 1.1rem 1rem 1.5rem; width: 100%; max-width: none; margin: 0; }
 .app-conteudo h1 { font-size: 1.4rem; margin: .1rem 0 .6rem; }
 .passo { margin: 0; font-size: .85rem; color: var(--suave); }
 .texto-apoio { color: var(--suave); margin: 0 0 .75rem; }
@@ -130,6 +130,21 @@ html.contraste .barra-status, html.contraste .app-topo { background: #000; color
 }
 
 .apenas-estreito { display: none; }
+
+/* ---------- Ajustes para ficar igual aos modelos ---------- */
+/* Avisos: caixa com borda completa e cantos arredondados */
+.app-conteudo .aviso { border: 2px solid; border-radius: 12px; font-weight: 400; }
+.app-conteudo .aviso.info { border-color: var(--marca); background: var(--marca-clara); }
+/* Horário sem vaga: só esmaecido */
+.escolha-btn:disabled { opacity: .5; border-style: solid; background: var(--superficie); }
+.escolha-btn:disabled .nome { text-decoration: none; color: var(--texto); }
+.voltar-lista { margin-top: .55rem; }
+/* Opções discretas no fim da tela */
+.rodape-app { display: flex; flex-wrap: wrap; justify-content: center; gap: .25rem 1.25rem; margin-top: 2rem; padding-top: .75rem; border-top: 1px solid var(--linha); }
+.rodape-app .link-botao { font-size: .9rem; min-height: 40px; }
+.dialogo dl dt { font-weight: 700; margin-top: .6rem; }
+.dialogo dl dd { margin: .1rem 0 0; }
+.demo-pacientes { margin-top: .75rem; border-top: 1px dashed var(--linha-forte); padding-top: .4rem; }
 
 /* ---------- Cadastro ---------- */
 .divisor { display: flex; align-items: center; gap: .75rem; margin: 1.4rem 0 .2rem; color: var(--suave); font-size: .9rem; }

@@ -116,8 +116,13 @@ export function configurarAjustes() {
   aplicar();
   document.getElementById('aumentar')?.addEventListener('click', () => { escala = Math.min(escala + 12.5, 175); aplicar(); gravar('cf-escala', escala); });
   document.getElementById('diminuir')?.addEventListener('click', () => { escala = Math.max(escala - 12.5, 87.5); aplicar(); gravar('cf-escala', escala); });
-  const botao = document.getElementById('contraste');
-  const setContraste = (on) => { raiz.classList.toggle('contraste', on); botao?.setAttribute('aria-pressed', String(on)); gravar('cf-contraste', on ? '1' : '0'); };
+  // Botão de contraste: #contraste (painel) ou qualquer [data-contraste] (app do cidadão)
+  const botoes = [...document.querySelectorAll('#contraste, [data-contraste]')];
+  const setContraste = (on) => {
+    raiz.classList.toggle('contraste', on);
+    botoes.forEach((b) => b.setAttribute('aria-pressed', String(on)));
+    gravar('cf-contraste', on ? '1' : '0');
+  };
   setContraste(ler('cf-contraste', '0') === '1');
-  botao?.addEventListener('click', () => setContraste(!raiz.classList.contains('contraste')));
+  botoes.forEach((b) => b.addEventListener('click', () => setContraste(!raiz.classList.contains('contraste'))));
 }
