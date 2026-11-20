@@ -3,6 +3,13 @@
 Aplicativo funcional da proposta do **Grupo 2 (A3)**: agendar, remarcar e cancelar consultas nas UBS,
 lembretes por SMS, fila de espera e painel para a equipe da UBS.
 
+> **Protótipo acadêmico — uso e distribuição livres.**
+> Este projeto foi feito para a disciplina *Modelos, Métodos e Técnicas de Engenharia de Software*.
+> O município de Vale Verde, as UBS, os profissionais e os pacientes são **fictícios**.
+> Qualquer pessoa pode **usar, copiar, modificar e distribuir** o código, inclusive para outros trabalhos,
+> nos termos da [licença MIT](LICENSE). Ele é oferecido "como está", sem garantia: antes de um uso real
+> com dados de saúde, seria preciso uma revisão de segurança e de conformidade com a LGPD.
+
 **No ar:** https://consulta-facil-kappa.vercel.app · painel da equipe: https://consulta-facil-kappa.vercel.app/painel
 (demonstração com dados fictícios; os dados recomeçam de tempos em tempos).
 
@@ -113,9 +120,14 @@ O mesmo código roda localmente (`npm start`) e na Vercel:
 
 ## SMS real e Docker
 
-- **SMS de verdade, de graça:** `SMS_PROVEDOR=smsgate` + usuário/senha do app **SMS Gateway for Android**
-  (código aberto): um celular Android envia os SMS pelo próprio chip. Também há suporte ao Twilio (pago após o
-  crédito de teste). Veja `.env.example` e a seção 12 do COMO-USAR. Sem credenciais, o app usa o provedor simulado. Número inválido ou não verificado
+- **SMS de verdade (opcional, pronto para quem quiser ligar):** a versão publicada usa o **SMS simulado**: as
+  mensagens aparecem na tela e no painel, e nada é enviado a celulares. Quem quiser receber SMS de verdade pode
+  ligar o envio real **sem mexer no código**, só com variáveis de ambiente:
+  - **Grátis:** instale o app **SMS Gateway for Android** (código aberto) num celular Android, ative o *Cloud
+    server* e use `SMS_PROVEDOR=smsgate`, `SMSGATE_USUARIO` e `SMSGATE_SENHA`. Os SMS saem do chip desse celular.
+  - **Pago:** Twilio (`SMS_PROVEDOR=twilio`), depois do crédito de teste.
+
+  O passo a passo está em `.env.example` e na seção 12 do [COMO-USAR](COMO-USAR.md). Número inválido ou não verificado
   (erro 4xx) é **falha permanente**: vai direto para a lista "ligar para o paciente" e não abre o circuit
   breaker. Provedor fora do ar (5xx/timeout) é **falha temporária**: retenta com espera crescente.
 - **Docker:** `docker compose up -d --build`; o banco fica num volume e é **permanente** (seção 13 do COMO-USAR).
@@ -131,5 +143,12 @@ O mesmo código roda localmente (`npm start`) e na Vercel:
 
 Para recomeçar do zero, apague a pasta `data/`.
 
-Fora do escopo deste protótipo: provedor de SMS/WhatsApp real, conexão ao banco real do SIGA-Saúde,
-pipeline de CI/CD e backup PITR (descritos nas questões 5 e 6 do documento).
+Fora do escopo deste protótipo: conexão ao banco real do SIGA-Saúde (aqui ele é simulado), pipeline de CI/CD
+e backup PITR (descritos nas questões 5 e 6 do documento). O envio real de SMS já está pronto, mas vem desligado
+(veja "SMS real e Docker").
+
+## Licença
+
+Protótipo acadêmico de **uso e distribuição livres**, sob a [licença MIT](LICENSE): você pode usar, copiar,
+modificar, publicar e distribuir, inclusive em outros projetos, mantendo o aviso de licença. Sem garantia de
+qualquer tipo. Todos os dados de demonstração (CPFs, nomes, telefones e UBS) são fictícios.
